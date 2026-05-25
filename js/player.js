@@ -1,17 +1,13 @@
 /* ========================================
-   player.js — YouTube IFrame API + timestamp auto-save
+   player.js — YouTube IFrame Player API + progress tracking
    ======================================== */
 
 const Player = {
 
-  ytPlayer: null,
   currentVideoId: null,
-  saveInterval: null,
-  isReady: false,
-
-  // ----- Track if YT API timed out -----
-  ytApiTimedOut: false,
-  ytApiFailureShown: false,
+  ytPlayer: null,
+  _progressInterval: null,
+  _frameTimeout: null,
 
   // ----- Open player for a video -----
 
@@ -47,194 +43,188 @@ const Player = {
     // Progress
     this.updateProgress(video);
 
-
-    // Show player screen
+    // Show player screen with skeleton for transition effect
     Router.showScreen('screen-player');
-    // Show skeleton while YouTube API loads
     Router.showSkeleton('screen-player');
 
-    // Fallback: hide skeleton after 10s if player fails to load
-    this._ytTimeout = setTimeout(() => {
+    // Brief delay for the skeleton transition, then create the player
+    this._frameTimeout = setTimeout(() => {
       Router.hideSkeleton('screen-player');
-      // If YT API never loaded, show fallback error
-      if (!this.isReady && !this.ytApiFailureShown) {
-        this.ytApiTimedOut = true;
-        this.showYtApiError();
-      }
-    }, 10000);
+      this._initPlayer(video);
+    }, 350);
 
-    // Load or update YouTube player
-    if (this.isReady && this.ytPlayer && typeof this.ytPlayer.loadVideoById === 'function') {
-      this.ytPlayer.loadVideoById({
-        videoId: video.videoId,
-        startSeconds: video.timestamp || 0
-      });
-    } else {
-      this.createPlayer(video.videoId, video.timestamp || 0);
-    }
-
-    // Start auto-save
-    this.startAutoSave();
-
-    // Re-init icons for back button
+    // Re-init Lucide icons
     if (typeof refreshIcons === 'function') {
       refreshIcons();
     }
   },
 
-  // ----- Show YouTube API load failure UI -----
+  // ----- Initialize YouTube player (handle API loading) -----
 
-  showYtApiError() {
-    this.ytApiFailureShown = true;
-    const wrapper = document.querySelector('.player-wrapper');
-    if (!wrapper) return;
-    wrapper.innerHTML = `
-      <div class="yt-error-fallback">
-        <div class="yt-error-icon">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-        </div>
-        <h3 class="yt-error-title">Could not load YouTube player</h3>
-        <p class="yt-error-text">Unable to connect to YouTube. Please check your internet connection or try again later.</p>
-        <p class="yt-error-hint">You can still view video details below.</p>
-      </div>
-    `;
-  },
-
-  // ----- Clear error state -----
-
-  clearErrorState() {
-    this.ytApiTimedOut = false;
-    this.ytApiFailureShown = false;
-    if (this._ytTimeout) {
-      clearTimeout(this._ytTimeout);
-      this._ytTimeout = null;
-    }
-  },
-
-  // ----- Create YouTube IFrame Player -----
-
-  createPlayer(youtubeVideoId, startSeconds) {
-    // 1. Ensure YT API is ready
-    if (typeof YT === 'undefined' || !YT.Player) {
-      setTimeout(() => this.createPlayer(youtubeVideoId, startSeconds), 100);
+  _initPlayer(video) {
+    if (typeof YT !== 'undefined' && YT.Player) {
+      this._createYtPlayer(video);
       return;
     }
 
-    // 2. Destroy existing instance completely to prevent origin cross-talk
-    if (this.ytPlayer && typeof this.ytPlayer.destroy === 'function') {
-      try {
-        this.ytPlayer.destroy();
-      } catch (e) {
-        console.warn('Player destroy failed:', e);
-      }
-    }
-    this.ytPlayer = null;
-    this.isReady = false;
+    // API not loaded yet — wait for it
+    var self = this;
+    var apiTimeout = setTimeout(function() {
+      showToast('Video player could not load. Check your connection.');
+    }, 8000);
 
-    // 3. Force-clean the DOM container
-    const wrapper = document.querySelector('.player-wrapper');
-    if (wrapper) {
-      wrapper.innerHTML = '<div id="youtube-player"></div>';
-    }
-
-    // 4. Construct perfectly formatted origin (no trailing slashes, explicit protocol)
-    const cleanOrigin = window.location.origin.replace(/\/$/, '');
-
-    // 5. Initialize with hardened playerVars
-    this.ytPlayer = new YT.Player('youtube-player', {
-      host: 'https://www.youtube.com',
-      videoId: youtubeVideoId,
-      playerVars: {
-        'enablejsapi': 1,
-        'origin': cleanOrigin,
-        'widget_referrer': cleanOrigin,
-        'autoplay': 1,
-        'start': Math.floor(startSeconds),
-        'modestbranding': 1,
-        'rel': 0,
-        'playsinline': 1,
-        'fs': 1,
-        'controls': 1,
-        'disablekb': 0,
-        'iv_load_policy': 3
-      },
-      events: {
-        'onReady': (event) => this.onPlayerReady(event),
-        'onStateChange': (event) => this.onPlayerStateChange(event),
-        'onError': (event) => console.warn('YT Player Warning:', event.data)
-      }
+    window.addEventListener('yt-api-ready', function onApiReady() {
+      window.removeEventListener('yt-api-ready', onApiReady);
+      clearTimeout(apiTimeout);
+      self._createYtPlayer(video);
     });
   },
 
-  // ----- Player events -----
+  // ----- Create YouTube Player instance -----
 
-  onPlayerReady(event) {
-    this.isReady = true;
+  _createYtPlayer(video) {
+    // Destroy previous player if exists
+    if (this.ytPlayer) {
+      this._stopProgressInterval();
+      try { this.ytPlayer.destroy(); } catch (e) {}
+      this.ytPlayer = null;
+    }
 
-    // Hide skeleton after player is ready
-    Router.hideSkeleton('screen-player');
+    var wrapper = document.querySelector('.player-wrapper');
+    if (!wrapper) return;
 
-    // Save duration
-    const duration = event.target.getDuration();
-    if (this.currentVideoId && duration > 0) {
-      Storage.updateVideo(this.currentVideoId, { duration });
+    // Clear and recreate the target div
+    wrapper.innerHTML = '';
+    wrapper.insertAdjacentHTML('beforeend', '<div id="youtube-player"></div>');
+
+    var startSeconds = video.timestamp || 0;
+
+    try {
+      this.ytPlayer = new YT.Player('youtube-player', {
+        videoId: video.videoId,
+        host: 'https://www.youtube.com',
+        playerVars: {
+          autoplay: 1,
+          start: Math.floor(startSeconds),
+          modestbranding: 1,
+          rel: 0,
+          playsinline: 1,
+          fs: 1,
+          controls: 1,
+          disablekb: 0,
+          iv_load_policy: 3,
+          enablejsapi: 1,
+          origin: window.location.origin
+        },
+        events: {
+          onReady: this._onPlayerReady.bind(this),
+          onStateChange: this._onStateChange.bind(this)
+        }
+      });
+    } catch (e) {
+      showToast('Could not load this video.');
+      this.ytPlayer = null;
     }
   },
 
-  onPlayerStateChange(event) {
-    // Video ended
-    if (event.data === YT.PlayerState.ENDED) {
-      Storage.updateVideo(this.currentVideoId, { 
-        timestamp: 0,
-        completed: true 
-      });
-      const video = Storage.getVideoById(this.currentVideoId);
-      if (video) {
-        this.updateProgress(video);
+  // ----- YouTube Player Event Handlers -----
+
+  _onPlayerReady: function(event) {
+    var self = Player;
+
+    // Save video duration
+    try {
+      var duration = self.ytPlayer.getDuration();
+      if (duration > 0) {
+        Storage.updateVideo(self.currentVideoId, { duration: Math.floor(duration) });
       }
+    } catch (e) {}
+
+    // Precise seek to saved timestamp (start param already did approximate seek)
+    var video = Storage.getVideoById(self.currentVideoId);
+    if (video && video.timestamp > 0) {
+      try {
+        self.ytPlayer.seekTo(video.timestamp, true);
+      } catch (e) {}
+    }
+
+    // Start periodic progress save
+    self._ensureProgressInterval();
+
+    // Save once immediately
+    self._saveProgress();
+  },
+
+  _onStateChange: function(event) {
+    var self = Player;
+
+    // ENDED
+    if (event.data === 0) {
+      self._saveProgress();
+      Storage.updateVideo(self.currentVideoId, { completed: true });
+      self._stopProgressInterval();
+      var video = Storage.getVideoById(self.currentVideoId);
+      self.updateProgress(video);
+      showToast('Video completed \u2713');
+    }
+    // PAUSED
+    else if (event.data === 2) {
+      self._saveProgress();
+    }
+    // PLAYING
+    else if (event.data === 1) {
+      self._ensureProgressInterval();
     }
   },
 
-  // ----- Auto-save timestamp every 5 seconds -----
+  // ----- Progress Save -----
 
-  startAutoSave() {
-    this.stopAutoSave();
+  _saveProgress: function() {
+    var self = Player;
+    if (!self.ytPlayer || !self.currentVideoId) return;
 
-    this.saveInterval = setInterval(() => {
-      if (!this.isReady || !this.ytPlayer || !this.currentVideoId) return;
+    try {
+      var currentTime = self.ytPlayer.getCurrentTime();
+      var duration = self.ytPlayer.getDuration();
 
-      const state = this.ytPlayer.getPlayerState();
-      if (state !== YT.PlayerState.PLAYING) return;
+      if (typeof currentTime !== 'number' || isNaN(currentTime)) return;
 
-      const currentTime = this.ytPlayer.getCurrentTime();
-      const duration = this.ytPlayer.getDuration();
-
-      Storage.updateVideo(this.currentVideoId, {
-        timestamp: currentTime,
-        duration: duration
-      });
-
-      // Auto-check complete
-      if (typeof Storage.autoCheckComplete === 'function') {
-        Storage.autoCheckComplete(this.currentVideoId);
+      var updates = { timestamp: Math.floor(currentTime) };
+      if (duration > 0) {
+        updates.duration = Math.floor(duration);
       }
 
-      // Update progress DOM
-      const video = Storage.getVideoById(this.currentVideoId);
-      if (video) {
-        this.updateProgress(video);
-      }
-    }, 5000);
+      Storage.updateVideo(self.currentVideoId, updates);
+
+      // Update progress bar UI
+      var video = Storage.getVideoById(self.currentVideoId);
+      if (video) self.updateProgress(video);
+    } catch (e) {}
   },
 
-  stopAutoSave() {
-    if (this.saveInterval) {
-      clearInterval(this.saveInterval);
-      this.saveInterval = null;
+  // ----- Interval Management -----
+
+  _ensureProgressInterval: function() {
+    var self = Player;
+    if (!self._progressInterval) {
+      self._progressInterval = setInterval(function() {
+        self._saveProgress();
+      }, 5000);
+    }
+  },
+
+  _stopProgressInterval: function() {
+    if (this._progressInterval) {
+      clearInterval(this._progressInterval);
+      this._progressInterval = null;
+    }
+  },
+
+  // ----- Pause -----
+
+  pause: function() {
+    if (this.ytPlayer && this.ytPlayer.pauseVideo) {
+      try { this.ytPlayer.pauseVideo(); } catch (e) {}
     }
   },
 
@@ -262,7 +252,7 @@ const Player = {
 
     if (progressText) {
       if (video.completed) {
-        progressText.textContent = 'Completed ✓';
+        progressText.textContent = 'Completed \u2713';
         progressText.classList.add('completed');
       } else {
         progressText.textContent = progress + '% watched';
@@ -299,35 +289,33 @@ const Player = {
     }
   },
 
-
   // ----- Close / back -----
 
   close() {
-    this.stopAutoSave();
-    this.clearErrorState();
+    // Save final progress
+    this._saveProgress();
 
-    // Save final timestamp before leaving
-    if (this.isReady && this.ytPlayer && this.currentVideoId) {
-      const currentTime = this.ytPlayer.getCurrentTime();
-      const duration = this.ytPlayer.getDuration();
-      Storage.updateVideo(this.currentVideoId, {
-        timestamp: currentTime,
-        duration: duration
-      });
-      if (typeof Storage.autoCheckComplete === 'function') {
-        Storage.autoCheckComplete(this.currentVideoId);
-      }
-      
-      // Pause video when leaving the player screen
-      if (typeof this.ytPlayer.pauseVideo === 'function') {
-        this.ytPlayer.pauseVideo();
-      }
+    // Stop interval
+    this._stopProgressInterval();
+
+    // Destroy YouTube player
+    if (this.ytPlayer) {
+      try { this.ytPlayer.destroy(); } catch (e) {}
+      this.ytPlayer = null;
     }
 
-    // Go back first to show the previous screen
+    // Clear pending timeout
+    if (this._frameTimeout) {
+      clearTimeout(this._frameTimeout);
+      this._frameTimeout = null;
+    }
+
+    this.currentVideoId = null;
+
+    // Go back
     Router.goBack();
 
-    // Then refresh home content
+    // Refresh home
     Home.render();
   }
 
@@ -346,12 +334,12 @@ document.getElementById('player-complete-btn').addEventListener('click', () => {
 
   const newState = !video.completed;
   Storage.updateVideo(Player.currentVideoId, { completed: newState });
-  
+
   const updatedVideo = Storage.getVideoById(Player.currentVideoId);
   Player.updateProgress(updatedVideo);
-  
+
   if (newState) {
-    showToast('Video marked as completed ✓');
+    showToast('Video marked as completed \u2713');
   }
 });
 
@@ -367,14 +355,18 @@ document.getElementById('player-delete-btn').addEventListener('click', () => {
     confirmText: 'Delete',
     onConfirm: () => {
       Storage.deleteVideo(videoId);
-      
-      Player.stopAutoSave();
-      if (Player.ytPlayer && typeof Player.ytPlayer.destroy === 'function') {
-        Player.ytPlayer.destroy();
+
+      // Clean up player
+      Player._stopProgressInterval();
+      if (Player.ytPlayer) {
+        try { Player.ytPlayer.destroy(); } catch (e) {}
+        Player.ytPlayer = null;
       }
-      Player.ytPlayer = null;
+      const wrapper = document.querySelector('.player-wrapper');
+      if (wrapper) wrapper.innerHTML = '';
+
       Player.currentVideoId = null;
-      
+
       Home.render();
       Playlists.renderList();
       Playlists.toggleEmptyState();
@@ -384,25 +376,25 @@ document.getElementById('player-delete-btn').addEventListener('click', () => {
   });
 });
 
+// ----- Visibility & Unload Handlers -----
 
-// NOTE: YouTube IFrame API is loaded once in index.html via:
-// <script src="https://www.youtube.com/iframe_api"></script>
-// Do NOT inject it again here — that causes a race condition.
-
-// YouTube API calls this global function when ready
-function onYouTubeIframeAPIReady() {
-  // API loaded — player will be created when a video is opened
-  // Clear any previous error state
-  Player.ytApiTimedOut = false;
-  Player.ytApiFailureShown = false;
-}
-
-// ----- Page Visibility (Pause on screen off / background) -----
-
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden && Player.ytPlayer && typeof Player.ytPlayer.pauseVideo === 'function') {
-    Player.ytPlayer.pauseVideo();
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden) {
+    Player.pause();
   }
+});
+
+window.addEventListener('beforeunload', function() {
+  Player._saveProgress();
+  Player._stopProgressInterval();
+  if (Player.ytPlayer) {
+    try { Player.ytPlayer.destroy(); } catch (e) {}
+    Player.ytPlayer = null;
+  }
+});
+
+window.addEventListener('pagehide', function() {
+  Player._saveProgress();
 });
 
 // ----- Fullscreen Auto Landscape -----
@@ -412,7 +404,7 @@ document.addEventListener('visibilitychange', () => {
     const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
     if (isFullscreen) {
       if (screen.orientation && screen.orientation.lock) {
-        screen.orientation.lock("landscape").catch(e => console.log("Orientation lock failed", e));
+        screen.orientation.lock("landscape").catch(e => {});
       }
     } else {
       if (screen.orientation && screen.orientation.unlock) {

@@ -28,9 +28,11 @@
 
 - **🎥 Save YouTube Videos** — Paste any YouTube link and save it with auto-fetched title and thumbnail
 - **📂 Organize in Playlists** — Create, rename, and delete playlists to keep your learning organized
-- **▶️ Distraction-Free Player** — Watch videos inside the app with no YouTube distractions
-- **⏱️ Auto-Resume** — Automatically saves your progress every 5 seconds; pick up where you left off
-- **✅ Mark as Complete** — Track your learning progress with completion badges
+- **▶️ Distraction-Free Player** — Full YouTube IFrame Player API integration with programmatic controls
+- **⏱️ Auto-Resume** — Progress saved every 5 seconds + on pause/tab switch/close; resumes from exact position
+- **⏸️ Smart Pause** — Video auto-pauses when you switch tabs, minimize the screen, or close the app
+- **✅ Auto-Complete** — Videos automatically marked as complete when they finish playing
+- **📱 PWA Ready** — Installable as an app with offline support via Service Worker
 - **📱 Fully Responsive** — Works perfectly on mobile and desktop
 - **⚡ Pure Vanilla JS** — No frameworks, no build step, no backend required
 
@@ -107,7 +109,16 @@ studyflow/
 2. **Auto-fetch** — Title and thumbnail are fetched via oEmbed API
 3. **Organize** — Assign videos to playlists you create
 4. **Watch & Learn** — Click any video to open the distraction-free player
-5. **Auto-Resume** — Progress saves every 5 seconds, so you never lose your place
+5. **Auto-Resume** — Progress saves every 5 seconds + on tab switch/close; resumes from exact position
+6. **Smart Pause** — Video pauses automatically when you leave the app; resumes when you return
+
+## 📲 PWA / Install
+
+StudyFlow is a Progressive Web App. You can install it on your device:
+
+1. Open the app in Chrome/Edge/Safari
+2. Click the **Install** button in the address bar (or use browser menu → "Add to Home Screen")
+3. The app works offline once installed — all data is stored locally in your browser
 
 ## ♿ Accessibility
 
@@ -125,6 +136,6 @@ This project is open source. Feel free to use, modify, and share.
 
 <div align="center">
 
-Built with ❤️ for distraction-free learning
+Built with ❤️ Starverse [Ayush Gupta]
 
 </div>

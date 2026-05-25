@@ -477,13 +477,11 @@ input, select, textarea {
 .nav-item.active::before {
   content: '';
   position: absolute;
-  top: 6px;
   width: 22px;
   height: 3px;
   background: var(--primary);
   border-radius: var(--radius-full);
   opacity: 0.3;
-  top: auto;
   bottom: 6px;
 }
 
@@ -579,12 +577,30 @@ input, select, textarea {
 }
 
 /* ========================================
-   Skeleton Loader (static placeholder)
+   Skeleton Loader (shimmer animation)
    ======================================== */
 
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0;  }
+}
+
 .skeleton {
-  background: var(--progress-bg);
+  background: linear-gradient(
+    90deg,
+    var(--progress-bg) 25%,
+    rgba(180, 200, 230, 0.35) 50%,
+    var(--progress-bg) 75%
+  );
+  background-size: 200% 100%;
   border-radius: var(--radius-sm);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* When skeleton is active on a screen, hide the real content underneath.
+   Content fades back in via its own animation when skeleton-active is removed. */
+.screen.skeleton-active .screen-content {
+  display: none;
 }
 
 /* ========================================
@@ -604,12 +620,18 @@ input, select, textarea {
 
 .screen-content {
   opacity: 0;
-  animation: contentFadeIn 220ms ease forwards;
+  animation: contentFadeIn 280ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes contentFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ---------- Skeleton Dimension Classes ---------- */
@@ -876,8 +898,6 @@ input, select, textarea {
   pointer-events: none;
   white-space: nowrap;
   box-shadow: var(--shadow-lg);
-  /* Accessible */
-  aria-live: polite;
 }
 
 .toast.show {

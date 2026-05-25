@@ -41,7 +41,18 @@ const Storage = {
   PLAYLISTS_KEY: 'sf_playlists',
   LAST_WATCHED_KEY: 'sf_last_watched',
 
-    // ----- Generic helpers -----
+  // ----- In-memory cache -----
+
+  /**
+   * In-memory cache to avoid repeated localStorage reads + JSON.parse.
+   * Updated on every write via _writeVideos / _writePlaylists.
+   */
+  _cache: {
+    videos: null,
+    playlists: null
+  },
+
+  // ----- Generic helpers -----
 
   /**
    * Get parsed JSON from localStorage.
@@ -78,7 +89,10 @@ const Storage = {
   // ----- Videos -----
 
   getVideos() {
-    return this._get(this.VIDEOS_KEY) || [];
+    if (!this._cache.videos) {
+      this._cache.videos = this._get(this.VIDEOS_KEY) || [];
+    }
+    return this._cache.videos;
   },
 
   getVideoById(id) {
@@ -88,7 +102,13 @@ const Storage = {
   saveVideo(video) {
     const videos = this.getVideos();
     videos.push(video);
-    return this._set(this.VIDEOS_KEY, videos);
+    return this._writeVideos(videos);
+  },
+
+  _writeVideos(videos) {
+    const ok = this._set(this.VIDEOS_KEY, videos);
+    if (ok) this._cache.videos = videos;
+    return ok;
   },
 
   updateVideo(id, updates) {
@@ -96,18 +116,21 @@ const Storage = {
     const index = videos.findIndex(v => v.id === id);
     if (index === -1) return false;
     videos[index] = { ...videos[index], ...updates };
-    return this._set(this.VIDEOS_KEY, videos);
+    return this._writeVideos(videos);
   },
 
   deleteVideo(id) {
     const videos = this.getVideos().filter(v => v.id !== id);
-    return this._set(this.VIDEOS_KEY, videos);
+    return this._writeVideos(videos);
   },
 
   // ----- Playlists -----
 
   getPlaylists() {
-    return this._get(this.PLAYLISTS_KEY) || [];
+    if (!this._cache.playlists) {
+      this._cache.playlists = this._get(this.PLAYLISTS_KEY) || [];
+    }
+    return this._cache.playlists;
   },
 
   getPlaylistById(id) {
@@ -118,7 +141,13 @@ const Storage = {
     const playlists = this.getPlaylists();
     playlist.colorIndex = playlists.length;
     playlists.push(playlist);
-    return this._set(this.PLAYLISTS_KEY, playlists);
+    return this._writePlaylists(playlists);
+  },
+
+  _writePlaylists(playlists) {
+    const ok = this._set(this.PLAYLISTS_KEY, playlists);
+    if (ok) this._cache.playlists = playlists;
+    return ok;
   },
 
   updatePlaylistName(id, newName) {
@@ -126,13 +155,13 @@ const Storage = {
     const index = playlists.findIndex(p => p.id === id);
     if (index === -1) return false;
     playlists[index].name = newName;
-    return this._set(this.PLAYLISTS_KEY, playlists);
+    return this._writePlaylists(playlists);
   },
 
   deletePlaylist(id) {
     // Remove playlist
     const playlists = this.getPlaylists().filter(p => p.id !== id);
-    this._set(this.PLAYLISTS_KEY, playlists);
+    this._writePlaylists(playlists);
 
     // Unassign videos from this playlist
     const videos = this.getVideos().map(v => {
@@ -141,7 +170,7 @@ const Storage = {
       }
       return v;
     });
-    this._set(this.VIDEOS_KEY, videos);
+    this._writeVideos(videos);
   },
 
   getVideosByPlaylist(playlistId) {

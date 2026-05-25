@@ -71,12 +71,11 @@ const Modal = {
     const overlay = document.getElementById('modal-overlay');
     const sheet = document.getElementById('modal-sheet');
 
-    sheet.classList.remove('slide-up');
     sheet.classList.add('slide-down');
 
     sheet.addEventListener('animationend', function handler() {
       overlay.style.display = 'none';
-      sheet.classList.remove('slide-down');
+      sheet.classList.remove('slide-up', 'slide-down');
       sheet.removeEventListener('animationend', handler);
     });
   },
@@ -88,6 +87,7 @@ const Modal = {
     document.getElementById('preview-thumbnail').src = '';
     document.getElementById('preview-title').value = '';
     document.getElementById('playlist-select').value = '';
+    document.getElementById('add-video-playlist-label').textContent = 'Select Playlist';
     this.fetchedData = null;
   },
 
@@ -123,12 +123,11 @@ const Modal = {
     const overlay = document.getElementById('edit-modal-overlay');
     const sheet = document.getElementById('edit-modal-sheet');
 
-    sheet.classList.remove('slide-up');
     sheet.classList.add('slide-down');
 
     sheet.addEventListener('animationend', function handler() {
       overlay.style.display = 'none';
-      sheet.classList.remove('slide-down');
+      sheet.classList.remove('slide-up', 'slide-down');
       sheet.removeEventListener('animationend', handler);
     });
 
@@ -209,13 +208,14 @@ const Modal = {
 
           // Stop player if playing this video
           if (Player.currentVideoId === videoId) {
-            Player.stopAutoSave();
-            if (Player.ytPlayer && typeof Player.ytPlayer.destroy === 'function') {
-              Player.ytPlayer.destroy();
+            Player._stopProgressInterval();
+            if (Player.ytPlayer) {
+              try { Player.ytPlayer.destroy(); } catch (e) {}
               Player.ytPlayer = null;
             }
+            const wrapper = document.querySelector('.player-wrapper');
+            if (wrapper) wrapper.innerHTML = '';
             Player.currentVideoId = null;
-            Player.isReady = false;
           }
 
           Home.render();
@@ -251,6 +251,32 @@ const Modal = {
     return null;
   },
 
+  // ----- oEmbed cache -----
+
+  _getCachedOembed(videoId) {
+    try {
+      const cache = JSON.parse(localStorage.getItem('sf_oembed_cache') || '{}');
+      const entry = cache[videoId];
+      if (entry && Date.now() - entry.timestamp < 86400000) { // 24hr cache
+        return entry.data;
+      }
+    } catch {}
+    return null;
+  },
+
+  _setCachedOembed(videoId, data) {
+    try {
+      const cache = JSON.parse(localStorage.getItem('sf_oembed_cache') || '{}');
+      cache[videoId] = { data, timestamp: Date.now() };
+      // Keep cache under 50 entries
+      const keys = Object.keys(cache);
+      if (keys.length > 50) {
+        delete cache[keys[0]];
+      }
+      localStorage.setItem('sf_oembed_cache', JSON.stringify(cache));
+    } catch {}
+  },
+
   // ----- Fetch oEmbed data -----
 
   async fetchVideoData(url) {
@@ -264,6 +290,19 @@ const Modal = {
 
     this.hideError();
 
+    // Check cache first
+    const cached = this._getCachedOembed(videoId);
+    if (cached) {
+      this.fetchedData = {
+        videoId: videoId,
+        title: cached.title,
+        thumbnail: 'https://i.ytimg.com/vi/' + videoId + '/hqdefault.jpg',
+        author: cached.author_name || ''
+      };
+      this.showPreview(this.fetchedData);
+      return;
+    }
+
     const oembedUrl = 'https://www.youtube.com/oembed?url=' + encodeURIComponent(url) + '&format=json';
 
     try {
@@ -271,6 +310,9 @@ const Modal = {
       if (!response.ok) throw new Error('Fetch failed');
 
       const data = await response.json();
+
+      // Cache it
+      this._setCachedOembed(videoId, data);
 
       this.fetchedData = {
         videoId: videoId,

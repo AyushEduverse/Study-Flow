@@ -39,9 +39,10 @@
   <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="site.webmanifest">
+
   <!-- Google Fonts - Poppins with font-display:swap -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- JSON-LD Structured Data -->
@@ -85,12 +86,30 @@
     }
   </script>
 
+  <!-- Preload critical resources -->
+  <link rel="preconnect" href="https://www.youtube.com">
+  <link rel="preconnect" href="https://www.youtube-nocookie.com">
+  <link rel="preconnect" href="https://i.ytimg.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://unpkg.com">
+
+  <!-- YouTube IFrame Player API -->
+  <script>
+    var ytApiReady = false;
+    function onYouTubeIframeAPIReady() {
+      ytApiReady = true;
+      window.dispatchEvent(new Event('yt-api-ready'));
+    }
+  </script>
+  <script src="https://www.youtube.com/iframe_api" async></script>
+
   <!-- App CSS -->
-  <link rel="stylesheet" href="css/main.css?v=1.2">
-  <link rel="stylesheet" href="css/home.css?v=1.2">
-  <link rel="stylesheet" href="css/player.css?v=1.2">
-  <link rel="stylesheet" href="css/playlists.css?v=1.2">
-  <link rel="stylesheet" href="css/modal.css?v=1.2">
+  <link rel="stylesheet" href="css/main.css?v=1.7">
+  <link rel="stylesheet" href="css/home.css?v=1.7">
+  <link rel="stylesheet" href="css/player.css?v=1.7">
+  <link rel="stylesheet" href="css/playlists.css?v=1.7">
+  <link rel="stylesheet" href="css/modal.css?v=1.7">
 </head>
 <body>
 
@@ -208,13 +227,13 @@
 
     <!-- Player Skeleton Loader (matches player layout exactly) -->
     <div id="player-skeleton" class="screen-skeleton player-skeleton">
-      <!-- Back button -->
+      <!-- Back button mimic -->
       <div class="sk-player-back-row">
         <div class="skeleton sk-h-circle"></div>
       </div>
-      <!-- Player wrapper (16:9) -->
+      <!-- Player wrapper mimic (16:9) -->
       <div class="skeleton sk-h-player-frame"></div>
-      <!-- Info panel -->
+      <!-- Info panel mimic -->
       <div class="sk-player-info">
         <div class="skeleton sk-h-line-2" style="width: 85%;"></div>
         <div class="skeleton sk-h-line-1" style="width: 40%; margin-bottom: 20px;"></div>
@@ -228,14 +247,15 @@
       </div>
     </div>
 
-    <!-- Actual Player Content -->
+    <!-- Player Content (hidden during skeleton via .skeleton-active .screen-content) -->
     <div id="player-content" class="screen-content">
+
       <!-- Back Button -->
       <button id="player-back" class="back-button" aria-label="Go back">
         <i data-lucide="arrow-left" aria-hidden="true"></i>
       </button>
 
-      <!-- YouTube Player Container -->
+      <!-- YouTube Player Container (hidden during skeleton, loads in background) -->
       <div class="player-wrapper" aria-label="Video player">
         <div id="youtube-player"></div>
       </div>
@@ -532,39 +552,12 @@
   </div>
 
   <!-- ========== APP SCRIPTS (load order matters) ========== -->
-  <script src="js/storage.js?v=1.2"></script>
-  <script src="js/router.js?v=1.2"></script>
-  <script src="js/modal.js?v=1.2"></script>
-  <script src="js/home.js?v=1.2"></script>
-  <script src="js/player.js?v=1.2"></script>
-  <script src="js/playlists.js?v=1.2"></script>
-
-  <!-- YouTube API fallback: detect if the API fails to load -->
-  <!-- Must come AFTER player.js so onYouTubeIframeAPIReady is already defined -->
-  <script>
-    (function() {
-      var ytFallbackTimer = setTimeout(function() {
-        window.__ytApiFailed = true;
-        if (typeof Player !== 'undefined' && Player.currentVideoId) {
-          Player.ytApiTimedOut = true;
-          Player.showYtApiError();
-        }
-      }, 8000);
-
-      // Wrap the real handler to clear the timer when YT API loads
-      var origOnReady = window.onYouTubeIframeAPIReady;
-      window.onYouTubeIframeAPIReady = function() {
-        clearTimeout(ytFallbackTimer);
-        window.__ytApiFailed = false;
-        if (typeof origOnReady === 'function') {
-          origOnReady();
-        }
-      };
-    })();
-  </script>
-
-  <!-- YouTube IFrame API — loaded ONCE at the end -->
-  <script src="https://www.youtube.com/iframe_api"></script>
+  <script src="js/storage.js?v=1.7"></script>
+  <script src="js/router.js?v=1.7"></script>
+  <script src="js/modal.js?v=1.7"></script>
+  <script src="js/home.js?v=1.7"></script>
+  <script src="js/player.js?v=1.7"></script>
+  <script src="js/playlists.js?v=1.7"></script>
 
   <!-- PWA Service Worker Registration -->
   <script>

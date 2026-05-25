@@ -10,6 +10,12 @@ const Router = {
   showScreen(screenId, isBack = false) {
     if (screenId === this.currentScreen) return;
 
+    // If leaving the player screen, pause and save progress
+    if (this.currentScreen === 'screen-player' && screenId !== 'screen-player') {
+      Player.pause();
+      Player._saveProgress();
+    }
+
     // Hide all .screen elements — skip transition to avoid blue flash
     document.querySelectorAll('.screen').forEach(s => {
       s.classList.add('no-transition');
@@ -27,6 +33,11 @@ const Router = {
     void next.offsetHeight;
     next.classList.remove('no-transition');
     next.classList.add('active');
+
+    // Show skeleton immediately for non-player screens (player shows its own skeleton)
+    if (screenId !== 'screen-player') {
+      this.showSkeleton(screenId);
+    }
 
     // Track previous screen for goBack — skip when going back to avoid ping-pong
     if (!isBack) {
@@ -62,7 +73,13 @@ const Router = {
     const skeletonId = skeletonMap[screenId];
     if (!skeletonId) return;
     const skeleton = document.getElementById(skeletonId);
-    if (skeleton) skeleton.style.display = 'block';
+    if (skeleton) {
+      skeleton.style.display = 'block';
+      skeleton.style.opacity = '1';
+      // Mark screen so CSS hides real content underneath
+      const screen = document.getElementById(screenId);
+      if (screen) screen.classList.add('skeleton-active');
+    }
   },
 
   // ----- Hide skeleton for a screen -----
@@ -76,15 +93,23 @@ const Router = {
     const skeletonId = skeletonMap[screenId];
     if (!skeletonId) return;
     const skeleton = document.getElementById(skeletonId);
-    if (skeleton) {
-      skeleton.style.opacity = '0';
-      skeleton.style.transition = 'opacity 220ms ease';
-      setTimeout(() => {
-        skeleton.style.display = 'none';
-        skeleton.style.opacity = '';
-        skeleton.style.transition = '';
-      }, 250);
-    }
+    if (!skeleton) return;
+
+    // Fade out skeleton
+    skeleton.style.opacity = '0';
+    skeleton.style.transition = 'opacity 220ms ease';
+
+    // After fade completes, hide skeleton and reveal content with animation
+    setTimeout(() => {
+      skeleton.style.display = 'none';
+      skeleton.style.opacity = '';
+      skeleton.style.transition = '';
+
+      // Remove skeleton-active so .screen-content becomes visible again
+      // CSS animation auto-restarts when display:none → block via class removal
+      const screen = document.getElementById(screenId);
+      if (screen) screen.classList.remove('skeleton-active');
+    }, 280);
   },
 
   updateNavActive(screenId) {
@@ -106,8 +131,12 @@ const Router = {
 
 document.getElementById('nav-home').addEventListener('click', () => {
   Router.showScreen('screen-home');
+  // Re-render home content (also hides skeleton)
+  Home.render();
 });
 
 document.getElementById('nav-playlists').addEventListener('click', () => {
   Router.showScreen('screen-playlists');
+  // Re-render playlists content (also hides skeleton)
+  Playlists.render();
 });

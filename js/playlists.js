@@ -188,12 +188,11 @@ const Playlists = {
     const overlay = document.getElementById('playlist-create-overlay');
     const sheet = document.getElementById('playlist-create-sheet');
 
-    sheet.classList.remove('slide-up');
     sheet.classList.add('slide-down');
 
     sheet.addEventListener('animationend', function handler() {
       overlay.style.display = 'none';
-      sheet.classList.remove('slide-down');
+      sheet.classList.remove('slide-up', 'slide-down');
       sheet.removeEventListener('animationend', handler);
     });
   },
