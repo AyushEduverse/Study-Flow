@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>StudyFlow — Distraction-Free YouTube Learning</title>
+  <meta name="description" content="Save YouTube videos, organize them in playlists, and watch with auto-resume. A distraction-free learning app.">
+  <meta name="keywords" content="youtube learning, study playlist, video organizer, distraction-free learning, study tool, youtube video saver, learning app">
+  <meta name="author" content="StudyFlow">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#4DA6FF">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="StudyFlow">
+  <meta name="msapplication-TileColor" content="#4DA6FF">
+
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://studyflow.app/">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://studyflow.app/">
+  <meta property="og:title" content="StudyFlow — Distraction-Free YouTube Learning">
+  <meta property="og:description" content="Save YouTube videos, organize them in playlists, and watch with auto-resume. A distraction-free learning app.">
+  <meta property="og:image" content="https://studyflow.app/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="StudyFlow — Distraction-Free YouTube Learning">
+  <meta name="twitter:description" content="Save YouTube videos, organize them in playlists, and watch with auto-resume.">
+  <meta name="twitter:image" content="https://studyflow.app/og-image.png">
+
+  <!-- Favicon & App Icons -->
+  <link rel="icon" type="image/x-icon" href="assets/icons/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
+
+  <!-- Google Fonts - Poppins with font-display:swap -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "StudyFlow",
+    "url": "https://studyflow.app/",
+    "description": "Save YouTube videos, organize them in playlists, and watch with auto-resume. A distraction-free learning app.",
+    "applicationCategory": "Educational Application",
+    "operatingSystem": "All",
+    "browserRequirements": "Requires JavaScript",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "author": {
+      "@type": "Organization",
+      "name": "StudyFlow"
+    }
+  }
+  </script>
+
+  <!-- Lucide Icons (CDN) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    /**
+     * Global helper to re-initialize Lucide icons in dynamic content.
+     * Defined here to ensure it's available to all app scripts immediately.
+     */
+    function refreshIcons() {
+      try {
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+          lucide.createIcons();
+        }
+      } catch (err) {
+        console.warn('Lucide icons could not be refreshed:', err);
+      }
+    }
+  </script>
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="css/main.css?v=1.2">
+  <link rel="stylesheet" href="css/home.css?v=1.2">
+  <link rel="stylesheet" href="css/player.css?v=1.2">
+  <link rel="stylesheet" href="css/playlists.css?v=1.2">
+  <link rel="stylesheet" href="css/modal.css?v=1.2">
+</head>
+<body>
+
+  <!-- ========== SCREEN: HOME ========== -->
+  <div id="screen-home" class="screen active" style="display: block;">
+
+    <!-- Home Skeleton Loader (matches real content layout exactly) -->
+    <div id="home-skeleton" class="screen-skeleton">
+      <!-- Header skeleton -->
+      <div class="skeleton-mimic-header">
+        <div class="skeleton sk-h-title"></div>
+      </div>
+
+      <!-- Continue Watching section -->
+      <div class="skeleton-mimic-section">
+        <div class="skeleton sk-h-section-title" style="width: 160px;"></div>
+        <div class="skeleton-mimic-continue-card">
+          <div class="skeleton sk-h-thumb-full"></div>
+          <div class="sk-continue-body">
+            <div class="skeleton sk-h-line-2"></div>
+            <div class="skeleton sk-h-line-1" style="width: 45%;"></div>
+            <div class="skeleton sk-h-progress-track"></div>
+            <div class="skeleton sk-h-btn"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- All Videos section -->
+      <div class="skeleton-mimic-section">
+        <div class="skeleton sk-h-section-title" style="width: 110px;"></div>
+        <div class="skeleton-mimic-grid">
+          <div class="skeleton-card">
+            <div class="skeleton sk-h-thumb-full"></div>
+            <div class="sk-card-body">
+              <div class="skeleton sk-h-line-2"></div>
+              <div class="skeleton sk-h-line-1" style="width: 55%;"></div>
+              <div class="skeleton sk-h-progress-mini"></div>
+            </div>
+          </div>
+          <div class="skeleton-card">
+            <div class="skeleton sk-h-thumb-full"></div>
+            <div class="sk-card-body">
+              <div class="skeleton sk-h-line-2"></div>
+              <div class="skeleton sk-h-line-1" style="width: 55%;"></div>
+              <div class="skeleton sk-h-progress-mini"></div>
+            </div>
+          </div>
+          <div class="skeleton-card">
+            <div class="skeleton sk-h-thumb-full"></div>
+            <div class="sk-card-body">
+              <div class="skeleton sk-h-line-2"></div>
+              <div class="skeleton sk-h-line-1" style="width: 55%;"></div>
+              <div class="skeleton sk-h-progress-mini"></div>
+            </div>
+          </div>
+          <div class="skeleton-card">
+            <div class="skeleton sk-h-thumb-full"></div>
+            <div class="sk-card-body">
+              <div class="skeleton sk-h-line-2"></div>
+              <div class="skeleton sk-h-line-1" style="width: 55%;"></div>
+              <div class="skeleton sk-h-progress-mini"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actual Home Content -->
+    <div id="home-content" class="screen-content">
+      <!-- Header -->
+      <header class="screen-header">
+        <h1 class="app-title">StudyFlow</h1>
+      </header>
+
+      <!-- Continue Watching -->
+      <section id="continue-watching" class="section" style="display: none;" aria-label="Continue Watching">
+        <h2 class="section-title">Continue Watching</h2>
+        <div id="continue-card" class="continue-card" role="button" tabindex="0" aria-label="Resume last video">
+          <div class="continue-thumbnail-wrapper">
+            <img id="continue-thumbnail" class="continue-thumbnail" src="" alt="Video thumbnail" loading="lazy">
+          </div>
+          <div class="continue-info">
+            <p id="continue-title" class="continue-title"></p>
+            <span id="continue-playlist" class="playlist-badge" style="display: none;"></span>
+          </div>
+          <div class="progress-bar-container" style="margin: 10px 14px 0;">
+            <div id="continue-progress" class="progress-bar-fill"></div>
+          </div>
+          <button id="continue-resume" class="btn-primary" style="margin: 12px 14px; width: calc(100% - 28px);">Resume</button>
+        </div>
+      </section>
+
+      <!-- All Videos -->
+      <section id="all-videos" class="section" aria-label="All Videos">
+        <h2 class="section-title">All Videos</h2>
+        <div id="videos-grid" class="videos-grid" role="list">
+          <!-- Video cards rendered by home.js -->
+        </div>
+      </section>
+
+      <!-- Empty State -->
+      <div id="empty-state-home" class="empty-state" style="display: none;" aria-label="No videos saved yet">
+        <div class="empty-state-icon">
+          <i data-lucide="video" aria-hidden="true"></i>
+        </div>
+        <p>No videos yet.<br>Tap <strong>+</strong> to add your first video.</p>
+        <span class="empty-state-hint">Paste any YouTube link to get started</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========== SCREEN: PLAYER ========== -->
+  <div id="screen-player" class="screen" style="display: none;">
+
+    <!-- Player Skeleton Loader (matches player layout exactly) -->
+    <div id="player-skeleton" class="screen-skeleton player-skeleton">
+      <!-- Back button -->
+      <div class="sk-player-back-row">
+        <div class="skeleton sk-h-circle"></div>
+      </div>
+      <!-- Player wrapper (16:9) -->
+      <div class="skeleton sk-h-player-frame"></div>
+      <!-- Info panel -->
+      <div class="sk-player-info">
+        <div class="skeleton sk-h-line-2" style="width: 85%;"></div>
+        <div class="skeleton sk-h-line-1" style="width: 40%; margin-bottom: 20px;"></div>
+        <div class="skeleton sk-h-progress-track"></div>
+        <div class="skeleton sk-h-progress-text" style="width: 100px;"></div>
+        <div class="skeleton sk-h-complete-btn"></div>
+        <div class="sk-player-actions-row">
+          <div class="skeleton sk-h-action-btn"></div>
+          <div class="skeleton sk-h-action-btn"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actual Player Content -->
+    <div id="player-content" class="screen-content">
+      <!-- Back Button -->
+      <button id="player-back" class="back-button" aria-label="Go back">
+        <i data-lucide="arrow-left" aria-hidden="true"></i>
+      </button>
+
+      <!-- YouTube Player Container -->
+      <div class="player-wrapper" aria-label="Video player">
+        <div id="youtube-player"></div>
+      </div>
+
+      <!-- Video Info -->
+      <div class="player-info">
+        <h1 id="player-title" class="player-title"></h1>
+        <span id="player-playlist-badge" class="playlist-badge" style="display: none;"></span>
+
+        <!-- Progress bar -->
+        <div class="player-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div id="player-progress-bar" class="player-progress-bar-fill"></div>
+        </div>
+        <span id="player-progress-text" class="player-progress-text">0% watched</span>
+
+        <button id="player-complete-btn" class="btn-complete-toggle" aria-label="Mark video as completed">
+          <i data-lucide="check-circle" aria-hidden="true"></i>
+          <span>Mark as Complete</span>
+        </button>
+
+        <div class="player-actions">
+          <button id="player-edit-btn" class="btn-outline" aria-label="Edit video details">
+            <i data-lucide="pencil" aria-hidden="true"></i>
+            Edit Video
+          </button>
+          <button id="player-delete-btn" class="btn-delete" aria-label="Delete video">
+            <i data-lucide="trash-2" aria-hidden="true"></i>
+            Delete Video
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========== SCREEN: PLAYLISTS ========== -->
+  <div id="screen-playlists" class="screen" style="display: none;">
+
+    <!-- Playlists Skeleton Loader (matches playlists layout exactly) -->
+    <div id="playlists-skeleton" class="screen-skeleton">
+      <!-- Header with New button -->
+      <div class="skeleton-mimic-header">
+        <div class="skeleton sk-h-title" style="width: 110px;"></div>
+        <div class="skeleton sk-h-pill" style="width: 68px;"></div>
+      </div>
+
+      <!-- Playlist cards -->
+      <div class="skeleton-mimic-playlist-list">
+        <div class="sk-playlist-card-row">
+          <div class="skeleton sk-h-square"></div>
+          <div class="sk-playlist-card-text">
+            <div class="skeleton sk-h-line-1" style="width: 60%;"></div>
+            <div class="skeleton sk-h-line-xs" style="width: 80px;"></div>
+          </div>
+          <div class="skeleton sk-h-icon-circle"></div>
+        </div>
+        <div class="sk-playlist-card-row">
+          <div class="skeleton sk-h-square"></div>
+          <div class="sk-playlist-card-text">
+            <div class="skeleton sk-h-line-1" style="width: 55%;"></div>
+            <div class="skeleton sk-h-line-xs" style="width: 70px;"></div>
+          </div>
+          <div class="skeleton sk-h-icon-circle"></div>
+        </div>
+        <div class="sk-playlist-card-row">
+          <div class="skeleton sk-h-square"></div>
+          <div class="sk-playlist-card-text">
+            <div class="skeleton sk-h-line-1" style="width: 65%;"></div>
+            <div class="skeleton sk-h-line-xs" style="width: 90px;"></div>
+          </div>
+          <div class="skeleton sk-h-icon-circle"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actual Playlists Content -->
+    <div id="playlists-content" class="screen-content">
+      <!-- Header -->
+      <header class="screen-header playlists-header">
+        <h1 class="app-title">Playlists</h1>
+        <button id="new-playlist-btn" class="btn-new-playlist" aria-label="Create a new playlist">
+          <i data-lucide="plus" aria-hidden="true"></i>
+          New
+        </button>
+      </header>
+
+      <!-- Playlists List -->
+      <section id="playlists-list" class="playlists-list" aria-label="Your playlists">
+        <!-- Playlist cards rendered by playlists.js -->
+      </section>
+
+      <!-- Empty State -->
+      <div id="empty-state-playlists" class="empty-state" style="display: none;" aria-label="No playlists yet">
+        <div class="empty-state-icon">
+          <i data-lucide="list-music" aria-hidden="true"></i>
+        </div>
+        <p>No playlists yet.<br>Create one to organize your videos.</p>
+        <span class="empty-state-hint">Tap "New" to create your first playlist</span>
+      </div>
+
+      <!-- Filtered Videos View (shown when a playlist is clicked) -->
+      <div id="playlist-videos-view" class="playlist-videos-view" style="display: none;" aria-live="polite">
+        <button id="playlist-back-btn" class="back-button-inline" aria-label="Back to all playlists">
+          <i data-lucide="arrow-left" aria-hidden="true"></i>
+          <span>Back to Playlists</span>
+        </button>
+        <h2 id="playlist-view-title" class="section-title"></h2>
+        <div id="playlist-videos-grid" class="videos-grid" role="list">
+          <!-- Filtered video cards rendered by playlists.js -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========== BOTTOM NAVIGATION ========== -->
+  <nav id="bottom-nav" class="bottom-nav" role="navigation" aria-label="Main navigation">
+    <button id="nav-home" class="nav-item active" data-screen="screen-home" aria-label="Home" aria-current="page">
+      <i data-lucide="home" aria-hidden="true"></i>
+      <span>Home</span>
+    </button>
+
+    <button id="nav-add" class="nav-fab" aria-label="Add a new video">
+      <i data-lucide="plus" aria-hidden="true"></i>
+    </button>
+
+    <button id="nav-playlists" class="nav-item" data-screen="screen-playlists" aria-label="Playlists">
+      <i data-lucide="list" aria-hidden="true"></i>
+      <span>Playlists</span>
+    </button>
+  </nav>
+
+  <!-- ========== ADD VIDEO MODAL ========== -->
+  <div id="modal-overlay" class="modal-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="add-modal-title">
+    <div id="modal-sheet" class="modal-sheet" role="document">
+
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h2 id="add-modal-title" class="modal-title">Add Video</h2>
+        <button id="modal-close" class="modal-close-btn" aria-label="Close add video modal">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <!-- URL Input -->
+      <div class="modal-field">
+        <label for="video-url-input">YouTube URL</label>
+        <input
+          type="url"
+          id="video-url-input"
+          class="modal-input"
+          placeholder="Paste YouTube link here..."
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+        >
+        <p id="url-error" class="field-error" style="display: none;" role="alert">Please enter a valid YouTube link</p>
+      </div>
+
+      <!-- Video Preview -->
+      <div id="video-preview" class="video-preview" style="display: none;" aria-live="polite">
+        <img id="preview-thumbnail" class="preview-thumbnail" src="" alt="Video thumbnail preview" loading="lazy">
+        <div class="preview-title-wrapper">
+          <label for="preview-title" class="sr-only">Video title</label>
+          <input
+            type="text"
+            id="preview-title"
+            class="preview-title-input"
+            placeholder="Video title"
+          >
+        </div>
+      </div>
+
+      <!-- Playlist Selector -->
+      <div class="modal-field">
+        <label for="playlist-select">Playlist</label>
+        <div class="custom-dropdown" id="add-video-playlist-dropdown">
+          <input type="hidden" id="playlist-select" value="">
+          <div class="custom-dropdown-trigger" id="add-video-playlist-trigger">
+            <span class="custom-dropdown-label" id="add-video-playlist-label">Select Playlist</span>
+            <i data-lucide="chevron-down" aria-hidden="true"></i>
+          </div>
+          <div class="custom-dropdown-menu" id="add-video-playlist-menu" style="display: none;">
+            <!-- populated by js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Save Button -->
+      <button id="modal-save" class="btn-primary btn-save">Save Video</button>
+
+    </div>
+  </div>
+
+  <!-- ========== EDIT VIDEO MODAL ========== -->
+  <div id="edit-modal-overlay" class="modal-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
+    <div id="edit-modal-sheet" class="modal-sheet" role="document">
+
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h2 id="edit-modal-title" class="modal-title">Edit Video</h2>
+        <button id="edit-modal-close" class="modal-close-btn" aria-label="Close edit video modal">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <!-- Title Input -->
+      <div class="modal-field">
+        <label for="edit-title-input">Video Title</label>
+        <input
+          type="text"
+          id="edit-title-input"
+          class="modal-input"
+          placeholder="Video title..."
+          aria-label="Edit video title"
+        >
+      </div>
+
+      <!-- Playlist Selector -->
+      <div class="modal-field">
+        <label for="edit-playlist-select">Playlist</label>
+        <div class="custom-dropdown" id="edit-video-playlist-dropdown">
+          <input type="hidden" id="edit-playlist-select" value="">
+          <div class="custom-dropdown-trigger" id="edit-video-playlist-trigger">
+            <span class="custom-dropdown-label" id="edit-video-playlist-label">Select Playlist</span>
+            <i data-lucide="chevron-down" aria-hidden="true"></i>
+          </div>
+          <div class="custom-dropdown-menu" id="edit-video-playlist-menu" style="display: none;">
+            <!-- populated by js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Save Button -->
+      <button id="edit-modal-save" class="btn-primary btn-save">Save Changes</button>
+
+      <!-- Delete Button -->
+      <button id="edit-modal-delete" aria-label="Delete this video permanently">Delete Video</button>
+
+    </div>
+  </div>
+
+  <!-- ========== PLAYLIST CREATE BOTTOM SHEET ========== -->
+  <div id="playlist-create-overlay" class="modal-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="playlist-create-title">
+    <div id="playlist-create-sheet" class="modal-sheet" role="document">
+
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h2 id="playlist-create-title" class="modal-title">New Playlist</h2>
+        <button id="playlist-create-close" class="modal-close-btn" aria-label="Close create playlist modal">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <!-- Playlist Name Input -->
+      <div class="modal-field">
+        <label for="playlist-create-input">Playlist Name</label>
+        <input
+          type="text"
+          id="playlist-create-input"
+          class="modal-input"
+          placeholder="Enter playlist name..."
+          maxlength="50"
+          aria-label="Playlist name"
+          autocomplete="off"
+        >
+      </div>
+
+      <!-- Confirm Button -->
+      <button id="playlist-create-confirm" class="btn-primary btn-save">Create Playlist</button>
+
+    </div>
+  </div>
+
+  <!-- ========== CUSTOM CONFIRMATION DIALOG ========== -->
+  <div id="confirm-dialog-overlay" class="modal-overlay" style="display: none; align-items: center;" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
+    <div id="confirm-dialog-sheet" class="confirm-dialog">
+      <div class="confirm-dialog-icon">
+        <i data-lucide="alert-triangle" aria-hidden="true"></i>
+      </div>
+      <h3 id="confirm-dialog-title" class="confirm-dialog-title">Are you sure?</h3>
+      <p id="confirm-dialog-message" class="confirm-dialog-message">This action cannot be undone.</p>
+      <div class="confirm-dialog-actions">
+        <button id="confirm-dialog-cancel" class="btn-cancel" aria-label="Cancel action">Cancel</button>
+        <button id="confirm-dialog-confirm" class="btn-danger" aria-label="Confirm action">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== TOAST NOTIFICATION ========== -->
+  <div id="toast" class="toast" style="display: none;" role="status" aria-live="polite" aria-atomic="true">
+    <p id="toast-message"></p>
+  </div>
+
+  <!-- ========== APP SCRIPTS (load order matters) ========== -->
+  <script src="js/storage.js?v=1.2"></script>
+  <script src="js/router.js?v=1.2"></script>
+  <script src="js/modal.js?v=1.2"></script>
+  <script src="js/home.js?v=1.2"></script>
+  <script src="js/player.js?v=1.2"></script>
+  <script src="js/playlists.js?v=1.2"></script>
+
+  <!-- YouTube API fallback: detect if the API fails to load -->
+  <!-- Must come AFTER player.js so onYouTubeIframeAPIReady is already defined -->
+  <script>
+    (function() {
+      var ytFallbackTimer = setTimeout(function() {
+        window.__ytApiFailed = true;
+        if (typeof Player !== 'undefined' && Player.currentVideoId) {
+          Player.ytApiTimedOut = true;
+          Player.showYtApiError();
+        }
+      }, 8000);
+
+      // Wrap the real handler to clear the timer when YT API loads
+      var origOnReady = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = function() {
+        clearTimeout(ytFallbackTimer);
+        window.__ytApiFailed = false;
+        if (typeof origOnReady === 'function') {
+          origOnReady();
+        }
+      };
+    })();
+  </script>
+
+  <!-- YouTube IFrame API — loaded ONCE at the end -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js', { scope: './' }).then((reg) => {
+          // Service worker registered successfully
+          console.log('[PWA] Service Worker registered for scope:', reg.scope);
+
+          // Check for updates (new SW version waiting)
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // New version available — show update toast
+                showToast('A new version is available. Close and reopen the app to update.');
+              }
+            });
+          });
+        }).catch((err) => {
+          console.warn('[PWA] Service Worker registration failed:', err);
+        });
+      });
+    }
+  </script>
+
+</body>
+</html>

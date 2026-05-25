@@ -1,0 +1,198 @@
+/* ========================================
+   player.css — Player screen styles
+   ======================================== */
+
+/* Screen has no side padding */
+#screen-player {
+  padding: 0;
+}
+
+/* Back button row */
+#screen-player .back-button {
+  margin: 10px 16px;
+}
+
+/* Player wrapper - full width, no gap */
+.player-wrapper {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000000;
+  position: relative;
+  /* Ensures iframe fills perfectly */
+  overflow: hidden;
+}
+
+.player-wrapper iframe,
+.player-wrapper #youtube-player,
+.player-wrapper > div {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+/* Video info panel */
+.player-info {
+  padding: 16px 16px 24px;
+}
+
+.player-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.4;
+  margin-bottom: 8px;
+  letter-spacing: -0.2px;
+}
+
+.player-info .playlist-badge {
+  margin-bottom: 14px;
+}
+
+/* Progress section */
+.player-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--progress-bg);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.player-progress-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--primary) 0%, #7CC4FF 100%);
+  border-radius: var(--radius-full);
+  transition: width 400ms ease, background 400ms ease;
+}
+
+.player-progress-bar-fill.completed {
+  background: var(--success);
+}
+
+.player-progress-text {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-align: right;
+  margin-bottom: 20px;
+  letter-spacing: 0.2px;
+}
+
+.player-progress-text.completed {
+  color: var(--success);
+}
+
+/* Complete Toggle Button */
+.btn-complete-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  background: #FFFFFF;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 700;
+  transition: all var(--transition-base), transform var(--transition-fast);
+  margin-top: 10px;
+}
+
+.btn-complete-toggle:active {
+  transform: scale(0.97);
+}
+
+.btn-complete-toggle i {
+  width: 18px;
+  height: 18px;
+  color: var(--text-tertiary);
+  transition: color var(--transition-base);
+}
+
+/* State: Completed */
+.btn-complete-toggle.is-completed {
+  background: #ECFDF5;
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.btn-complete-toggle.is-completed i {
+  color: var(--success);
+}
+
+/* Player action buttons — responsive flex row for mobile */
+.player-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-top: 24px;
+}
+
+.player-actions .btn-outline,
+.player-actions .btn-delete {
+  flex: 1;
+  justify-content: center;
+  white-space: nowrap;
+  font-size: 13px;
+  padding: 12px 8px;
+}
+
+/* ========================================
+   YouTube API Error Fallback
+   ======================================== */
+
+.yt-error-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  text-align: center;
+  background: #0F172A;
+  color: #FFFFFF;
+}
+
+.yt-error-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.yt-error-icon svg {
+  width: 32px;
+  height: 32px;
+  color: #F87171;
+}
+
+.yt-error-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #FFFFFF;
+}
+
+.yt-error-text {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.5;
+  max-width: 300px;
+  margin-bottom: 12px;
+}
+
+.yt-error-hint {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+}

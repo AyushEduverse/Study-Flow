@@ -1,0 +1,23 @@
+{
+  "name": "StudyFlow",
+  "short_name": "StudyFlow",
+  "description": "Distraction-free YouTube learning. Save videos, organize playlists, auto-resume.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "icons": [
+    {
+      "src": "assets/icons/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#4DA6FF",
+  "background_color": "#F0F6FF",
+  "display": "standalone",
+  "orientation": "portrait-primary"
+}
