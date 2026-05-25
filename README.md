@@ -7,12 +7,22 @@
 ### Distraction-Free YouTube Learning App
 
 <p align="center">
+  <a href="https://ayusheduverse.github.io/Study-Flow/">
+    <img src="https://img.shields.io/badge/Live_Demo-🌐-brightgreen?style=for-the-badge" alt="Live Demo">
+  </a>
+  <a href="https://github.com/AyushEduverse/Study-Flow">
+    <img src="https://img.shields.io/badge/GitHub-Repository-black?style=for-the-badge&logo=github" alt="GitHub Repo">
+  </a>
+</p>
+
+<p align="center">
   <strong>
     Save YouTube videos, organize them in playlists, and watch them with auto-resume from your last timestamp.
   </strong>
 </p>
 
 <p align="center">
+  <a href="https://ayusheduverse.github.io/Study-Flow/">🌐 Live Demo</a> •
   <a href="#-features">Features</a> •
   <a href="#-quick-start">Quick Start</a> •
   <a href="#-project-structure">Structure</a> •
@@ -42,10 +52,10 @@ No installation needed. Just open `index.html` in your browser!
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/studyflow.git
+git clone https://github.com/AyushEduverse/Study-Flow.git
 
 # Navigate into the project
-cd studyflow
+cd Study-Flow
 
 # Open directly in browser
 open index.html
@@ -57,10 +67,17 @@ open index.html
 ## 📁 Project Structure
 
 ```
-studyflow/
+Study-Flow/
 ├── index.html              ← Single HTML file, all screens
 ├── assets/
 │   ├── icons/              ← App icons (favicon, PWA icons, logo)
+│   │   ├── Study-Flow.png
+│   │   ├── favicon.ico
+│   │   ├── apple-touch-icon.png
+│   │   ├── android-chrome-192x192.png
+│   │   ├── android-chrome-512x512.png
+│   │   ├── favicon-16x16.png
+│   │   └── favicon-32x32.png
 │   └── screenshots/        ← README screenshots
 ├── css/
 │   ├── main.css            ← Design system, reset, bottom nav, skeleton loaders
@@ -79,7 +96,6 @@ studyflow/
 │   └── lucide.min.js       ← Local Lucide icon library (CDN fallback)
 ├── sw.js                   ← PWA Service Worker (caching strategies)
 ├── site.webmanifest        ← PWA manifest
-├── CLAUDE.md               ← PRD & technical specification
 └── README.md               ← You are here
 ```
 
