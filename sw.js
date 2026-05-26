@@ -3,7 +3,7 @@
    PWA offline support with smart caching
    ======================================== */
 
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const STATIC_CACHE = `studyflow-static-${CACHE_VERSION}`;
 const CDN_CACHE = `studyflow-cdn-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `studyflow-dynamic-${CACHE_VERSION}`;
@@ -26,6 +26,7 @@ const APP_SHELL = [
   './js/player.js',
   './js/playlists.js',
   './js/updater.js',
+  './version.json',
   './lib/lucide.min.js',
   './site.webmanifest',
   './assets/icons/favicon.ico',
@@ -99,6 +100,14 @@ self.addEventListener('fetch', (event) => {
 
   // Skip non-GET requests
   if (request.method !== 'GET') return;
+
+  // version.json: always network-only (no caching) so update checks are fresh
+  if (url.endsWith('version.json')) {
+    try {
+      event.respondWith(fetch(request));
+    } catch (e) { /* storage blocked */ }
+    return;
+  }
 
   // Skip YouTube API/iframe/thumbnail requests — they go to the network
   if (isYouTubeRequest(url)) {

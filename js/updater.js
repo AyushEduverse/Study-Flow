@@ -1,46 +1,106 @@
 /* ========================================
    updater.js — PWA Update Manager
-   Detects SW updates and shows update modal
+   Dual detection: version.json polling + SW lifecycle
    ======================================== */
+
+const APP_VERSION = '1.8.0';
+const UPDATE_CHECK_INTERVAL = 60 * 60 * 1000; // 1 hour
 
 const UpdateManager = {
 
   _registration: null,
+  _checkTimer: null,
+  _updateShown: false,
+  _currentRemoteVersion: null,
 
   // ----- Initialize -----
 
   init(registration) {
     this._registration = registration;
 
-    // If there's already a waiting SW (user came back with a pending update)
+    // Primary: version.json polling (most reliable)
+    this._startVersionPolling();
+
+    // Secondary: SW lifecycle events (catches updates between polls)
     if (registration.waiting) {
       this._onUpdateAvailable();
     }
 
-    // Listen for future updates
     registration.addEventListener('updatefound', () => {
       const newWorker = registration.installing;
       if (!newWorker) return;
 
       newWorker.addEventListener('statechange', () => {
         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-          // New content installed but old SW still controls the page
           this._onUpdateAvailable();
         }
       });
     });
 
-    // Listen for controller change (user tapped Update Now)
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       window.location.reload();
     });
   },
 
+  // ----- Version.json polling -----
+
+  _startVersionPolling() {
+    // Check immediately on load (after a small delay to not block rendering)
+    setTimeout(() => this._checkVersionJson(), 3000);
+
+    // Then check periodically
+    this._checkTimer = setInterval(() => this._checkVersionJson(), UPDATE_CHECK_INTERVAL);
+
+    // Also check when page becomes visible again (user switches back to tab)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        this._checkVersionJson();
+      }
+    });
+  },
+
+  async _checkVersionJson() {
+    try {
+      // Relative path — works on GitHub Pages sub-path and localhost
+      const res = await fetch('./version.json', { cache: 'no-store' });
+      if (!res.ok) return;
+
+      const data = await res.json();
+      if (!data.version) return;
+
+      this._currentRemoteVersion = data.version;
+
+      // Skip if user already accepted this version (persists across reloads)
+      const accepted = localStorage.getItem('sf_update_accepted');
+      if (accepted === data.version) return;
+
+      if (this._isNewer(data.version, APP_VERSION)) {
+        this._onUpdateAvailable();
+      }
+    } catch (e) {
+      // Network error or parse error — silent, will retry on next interval
+    }
+  },
+
+  // ----- Semver comparison (major.minor.patch) -----
+
+  _isNewer(remote, local) {
+    const r = remote.split('.').map(Number);
+    const l = local.split('.').map(Number);
+    for (let i = 0; i < 3; i++) {
+      if ((r[i] || 0) > (l[i] || 0)) return true;
+      if ((r[i] || 0) < (l[i] || 0)) return false;
+    }
+    return false;
+  },
+
   // ----- Show update modal -----
 
   _onUpdateAvailable() {
-    // Don't re-show if dismissed this session
+    if (this._updateShown) return;
     if (sessionStorage.getItem('sf_update_dismissed')) return;
+
+    this._updateShown = true;
 
     const overlay = document.getElementById('update-overlay');
     const sheet = document.getElementById('update-sheet');
@@ -56,10 +116,25 @@ const UpdateManager = {
 
   // ----- User taps "Update Now" -----
 
-  updateNow() {
+  async updateNow() {
+    // Resolve remote version (might be null if SW triggered the popup)
+    let version = this._currentRemoteVersion;
+    if (!version) {
+      try {
+        const res = await fetch('./version.json', { cache: 'no-store' });
+        const data = await res.json();
+        version = data.version;
+      } catch (e) { /* ignore */ }
+    }
+
+    // Mark this remote version as accepted (persists across reload)
+    if (version) {
+      localStorage.setItem('sf_update_accepted', version);
+    }
+
     const sw = this._getWaitingWorker();
     if (!sw) {
-      // No waiting worker — just reload
+      // No waiting SW — just reload to pick up new version.json
       window.location.reload();
       return;
     }

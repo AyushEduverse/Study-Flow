@@ -84,17 +84,20 @@ Study-Flow/
 │   ├── home.css            ← Home screen styles (continue watching, video grid)
 │   ├── player.css          ← Player screen styles (YT player, progress, actions)
 │   ├── playlists.css       ← Playlists screen styles (cards, kebab menu)
-│   └── modal.css           ← Modal/bottom sheet, custom dropdown, confirm dialog
+│   ├── modal.css           ← Modal/bottom sheet, custom dropdown, confirm dialog
+│   └── updater.css         ← PWA update modal styles
 ├── js/
 │   ├── storage.js          ← LocalStorage CRUD operations + toast + generateId
 │   ├── router.js           ← SPA screen switching + skeleton show/hide
 │   ├── home.js             ← Home screen render + continue watching logic
 │   ├── player.js           ← YouTube IFrame API + auto-save every 5s + orientation
 │   ├── playlists.js        ← Playlist CRUD, kebab menu, filtered view, dropdowns
-│   └── modal.js            ← Add/Edit video modal + oEmbed fetch + confirm dialog
+│   ├── modal.js            ← Add/Edit video modal + oEmbed fetch + confirm dialog
+│   └── updater.js          ← PWA update detection & in-app update modal
 ├── lib/
 │   └── lucide.min.js       ← Local Lucide icon library (CDN fallback)
 ├── sw.js                   ← PWA Service Worker (caching strategies)
+├── version.json            ← App version for update detection
 ├── site.webmanifest        ← PWA manifest
 └── README.md               ← You are here
 ```
