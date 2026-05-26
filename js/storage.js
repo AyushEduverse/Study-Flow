@@ -40,6 +40,7 @@ const Storage = {
   VIDEOS_KEY: 'sf_videos',
   PLAYLISTS_KEY: 'sf_playlists',
   LAST_WATCHED_KEY: 'sf_last_watched',
+  NOTES_KEY: 'sf_notes',
 
   // ----- In-memory cache -----
 
@@ -49,7 +50,8 @@ const Storage = {
    */
   _cache: {
     videos: null,
-    playlists: null
+    playlists: null,
+    notes: null
   },
 
   // ----- Generic helpers -----
@@ -201,6 +203,43 @@ const Storage = {
         this.updateVideo(id, { completed: true });
       }
     }
+  },
+
+  // ----- Notes -----
+
+  getNotes() {
+    if (!this._cache.notes) {
+      this._cache.notes = this._get(this.NOTES_KEY) || [];
+    }
+    return this._cache.notes;
+  },
+
+  _writeNotes(notes) {
+    const ok = this._set(this.NOTES_KEY, notes);
+    if (ok) this._cache.notes = notes;
+    return ok;
+  },
+
+  getNotesByVideoId(videoId) {
+    return this.getNotes()
+      .filter(n => n.videoId === videoId)
+      .sort((a, b) => a.timestamp - b.timestamp);
+  },
+
+  saveNote(note) {
+    const notes = this.getNotes();
+    notes.push(note);
+    return this._writeNotes(notes);
+  },
+
+  deleteNote(id) {
+    const notes = this.getNotes().filter(n => n.id !== id);
+    return this._writeNotes(notes);
+  },
+
+  deleteNotesByVideoId(videoId) {
+    const notes = this.getNotes().filter(n => n.videoId !== videoId);
+    return this._writeNotes(notes);
   }
 
 };

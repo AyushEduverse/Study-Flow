@@ -111,6 +111,7 @@
   <link rel="stylesheet" href="css/playlists.css?v=1.7">
   <link rel="stylesheet" href="css/modal.css?v=1.7">
   <link rel="stylesheet" href="css/updater.css?v=1.8">
+  <link rel="stylesheet" href="css/notes.css">
 </head>
 <body>
 
@@ -286,6 +287,41 @@
             <i data-lucide="trash-2" aria-hidden="true"></i>
             Delete Video
           </button>
+        </div>
+
+        <!-- Notes Section -->
+        <div id="notes-section" class="notes-section">
+          <div class="notes-header">
+            <h3 class="notes-title">
+              <i data-lucide="bookmark" aria-hidden="true"></i>
+              Notes
+            </h3>
+            <button id="add-note-btn" class="btn-add-note" aria-label="Add a note at current timestamp">
+              <i data-lucide="plus" aria-hidden="true"></i>
+              Add Note
+            </button>
+          </div>
+          <div id="notes-list" class="notes-list">
+            <!-- Notes rendered by notes.js -->
+          </div>
+          <div id="notes-empty" class="notes-empty" style="display: none;">
+            <i data-lucide="bookmark" aria-hidden="true"></i>
+            <p>No notes yet. Tap <strong>Add Note</strong> while watching.</p>
+          </div>
+        </div>
+
+        <!-- Add Note Form (hidden by default) -->
+        <div id="note-form-overlay" class="note-form-overlay" style="display: none;">
+          <div class="note-form">
+            <div class="note-form-header">
+              <span id="note-form-timestamp" class="note-form-timestamp">0:00</span>
+              <button id="note-form-close" class="note-form-close" aria-label="Cancel">
+                <i data-lucide="x" aria-hidden="true"></i>
+              </button>
+            </div>
+            <textarea id="note-form-text" class="note-form-text" placeholder="Write your note..." rows="3" maxlength="500"></textarea>
+            <button id="note-form-save" class="btn-primary btn-save-note">Save Note</button>
+          </div>
         </div>
       </div>
     </div>
@@ -578,6 +614,7 @@
   <script src="js/home.js?v=1.7"></script>
   <script src="js/player.js?v=1.7"></script>
   <script src="js/playlists.js?v=1.7"></script>
+  <script src="js/notes.js"></script>
   <script src="js/updater.js?v=1.8"></script>
 
   <!-- PWA Service Worker Registration -->

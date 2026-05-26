@@ -65,6 +65,11 @@ const Player = {
     if (typeof refreshIcons === 'function') {
       refreshIcons();
     }
+
+    // Init notes for this video
+    if (typeof Notes !== 'undefined') {
+      Notes.init(videoDbId);
+    }
   },
 
   // ----- Initialize YouTube player (handle API loading) -----
@@ -340,6 +345,11 @@ const Player = {
       this._apiTimeout = null;
     }
 
+    // Cleanup notes
+    if (typeof Notes !== 'undefined') {
+      Notes.destroy();
+    }
+
     this.currentVideoId = null;
 
     // Go back
@@ -385,6 +395,7 @@ document.getElementById('player-delete-btn').addEventListener('click', () => {
     confirmText: 'Delete',
     onConfirm: () => {
       Storage.deleteVideo(videoId);
+      Storage.deleteNotesByVideoId(videoId);
 
       // Clean up player
       Player._stopProgressInterval();

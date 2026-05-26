@@ -205,6 +205,7 @@ const Modal = {
         confirmText: 'Delete',
         onConfirm: () => {
           Storage.deleteVideo(videoId);
+          Storage.deleteNotesByVideoId(videoId);
 
           // Stop player if playing this video
           if (Player.currentVideoId === videoId) {
