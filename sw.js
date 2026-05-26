@@ -150,18 +150,24 @@ self.addEventListener('fetch', (event) => {
 // ----- Helpers: Check if URL is an app shell asset -----
 
 function isAppShellRequest(url) {
-  const path = new URL(url).pathname;
+  try {
+    const path = new URL(url).pathname;
 
-  // Match CSS files
-  if (path.match(/\/css\/.*\.css/)) return true;
-  // Match JS files
-  if (path.match(/\/js\/.*\.js/)) return true;
-  // Match manifest
-  if (path.endsWith('site.webmanifest')) return true;
-  // Match root (index.html)
-  if (path === '/' || path === '/index.html') return true;
+    // Match CSS files
+    if (path.endsWith('.css')) return true;
+    // Match JS files
+    if (path.endsWith('.js')) return true;
+    // Match manifest
+    if (path.endsWith('site.webmanifest')) return true;
+    // Match icon/image assets
+    if (path.includes('/assets/')) return true;
+    // Match root (index.html)
+    if (path.endsWith('/') || path.endsWith('/index.html')) return true;
 
-  return false;
+    return false;
+  } catch (e) {
+    return false;
+  }
 }
 
 // ----- Strategy: Cache First -----

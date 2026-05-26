@@ -209,6 +209,10 @@ const Modal = {
           // Stop player if playing this video
           if (Player.currentVideoId === videoId) {
             Player._stopProgressInterval();
+            if (Player._apiReadyCleanup) {
+              Player._apiReadyCleanup();
+              Player._apiReadyCleanup = null;
+            }
             if (Player.ytPlayer) {
               try { Player.ytPlayer.destroy(); } catch (e) {}
               Player.ytPlayer = null;

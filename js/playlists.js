@@ -117,19 +117,29 @@ const Playlists = {
 
     if (this.activeMenu && this.activeMenu !== menu) {
       this.activeMenu.style.display = 'none';
+      const prevCard = this.activeMenu.closest('.playlist-card');
+      if (prevCard) prevCard.style.zIndex = '';
     }
 
     if (menu.style.display === 'none') {
       menu.style.display = 'flex';
       this.activeMenu = menu;
+      const card = menu.closest('.playlist-card');
+      if (card) card.style.zIndex = '51';
     } else {
       menu.style.display = 'none';
       this.activeMenu = null;
+      const card = menu.closest('.playlist-card');
+      if (card) card.style.zIndex = '';
     }
   },
 
   closeMenus() {
-    document.querySelectorAll('.kebab-menu').forEach(m => m.style.display = 'none');
+    document.querySelectorAll('.kebab-menu').forEach(m => {
+      m.style.display = 'none';
+      const card = m.closest('.playlist-card');
+      if (card) card.style.zIndex = '';
+    });
     this.activeMenu = null;
   },
 

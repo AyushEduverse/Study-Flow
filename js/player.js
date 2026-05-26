@@ -8,12 +8,20 @@ const Player = {
   ytPlayer: null,
   _progressInterval: null,
   _frameTimeout: null,
+  _apiTimeout: null,
+  _apiReadyCleanup: null,
 
   // ----- Open player for a video -----
 
   open(videoDbId) {
     const video = Storage.getVideoById(videoDbId);
     if (!video) return;
+
+    // Clear any pending player init from a previous open() call
+    if (this._frameTimeout) {
+      clearTimeout(this._frameTimeout);
+      this._frameTimeout = null;
+    }
 
     this.currentVideoId = videoDbId;
 
@@ -67,17 +75,31 @@ const Player = {
       return;
     }
 
+    // Clean up any previous API listener from a prior _initPlayer call
+    if (this._apiReadyCleanup) {
+      this._apiReadyCleanup();
+      this._apiReadyCleanup = null;
+    }
+
     // API not loaded yet — wait for it
     var self = this;
-    var apiTimeout = setTimeout(function() {
+    this._apiTimeout = setTimeout(function() {
       showToast('Video player could not load. Check your connection.');
     }, 8000);
 
-    window.addEventListener('yt-api-ready', function onApiReady() {
-      window.removeEventListener('yt-api-ready', onApiReady);
-      clearTimeout(apiTimeout);
+    function onApiReady() {
+      self._apiReadyCleanup = null;
+      clearTimeout(self._apiTimeout);
+      self._apiTimeout = null;
       self._createYtPlayer(video);
-    });
+    }
+
+    window.addEventListener('yt-api-ready', onApiReady);
+    this._apiReadyCleanup = function() {
+      window.removeEventListener('yt-api-ready', onApiReady);
+      clearTimeout(self._apiTimeout);
+      self._apiTimeout = null;
+    };
   },
 
   // ----- Create YouTube Player instance -----
@@ -102,7 +124,6 @@ const Player = {
     try {
       this.ytPlayer = new YT.Player('youtube-player', {
         videoId: video.videoId,
-        host: 'https://www.youtube.com',
         playerVars: {
           autoplay: 1,
           start: Math.floor(startSeconds),
@@ -113,8 +134,7 @@ const Player = {
           controls: 1,
           disablekb: 0,
           iv_load_policy: 3,
-          enablejsapi: 1,
-          origin: window.location.origin
+          enablejsapi: 1
         },
         events: {
           onReady: this._onPlayerReady.bind(this),
@@ -298,16 +318,26 @@ const Player = {
     // Stop interval
     this._stopProgressInterval();
 
+    // Clean up pending API listener
+    if (this._apiReadyCleanup) {
+      this._apiReadyCleanup();
+      this._apiReadyCleanup = null;
+    }
+
     // Destroy YouTube player
     if (this.ytPlayer) {
       try { this.ytPlayer.destroy(); } catch (e) {}
       this.ytPlayer = null;
     }
 
-    // Clear pending timeout
+    // Clear pending timeouts
     if (this._frameTimeout) {
       clearTimeout(this._frameTimeout);
       this._frameTimeout = null;
+    }
+    if (this._apiTimeout) {
+      clearTimeout(this._apiTimeout);
+      this._apiTimeout = null;
     }
 
     this.currentVideoId = null;
@@ -358,6 +388,10 @@ document.getElementById('player-delete-btn').addEventListener('click', () => {
 
       // Clean up player
       Player._stopProgressInterval();
+      if (Player._apiReadyCleanup) {
+        Player._apiReadyCleanup();
+        Player._apiReadyCleanup = null;
+      }
       if (Player.ytPlayer) {
         try { Player.ytPlayer.destroy(); } catch (e) {}
         Player.ytPlayer = null;
@@ -379,14 +413,19 @@ document.getElementById('player-delete-btn').addEventListener('click', () => {
 // ----- Visibility & Unload Handlers -----
 
 document.addEventListener('visibilitychange', function() {
-  if (document.hidden) {
+  if (document.hidden && Player.ytPlayer && Player.currentVideoId) {
     Player.pause();
+    Player._saveProgress();
   }
 });
 
 window.addEventListener('beforeunload', function() {
   Player._saveProgress();
   Player._stopProgressInterval();
+  if (Player._apiReadyCleanup) {
+    Player._apiReadyCleanup();
+    Player._apiReadyCleanup = null;
+  }
   if (Player.ytPlayer) {
     try { Player.ytPlayer.destroy(); } catch (e) {}
     Player.ytPlayer = null;
