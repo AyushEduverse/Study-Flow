@@ -3,7 +3,7 @@
    PWA offline support with smart caching
    ======================================== */
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const STATIC_CACHE = `studyflow-static-${CACHE_VERSION}`;
 const CDN_CACHE = `studyflow-cdn-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `studyflow-dynamic-${CACHE_VERSION}`;
@@ -18,12 +18,14 @@ const APP_SHELL = [
   './css/player.css',
   './css/playlists.css',
   './css/modal.css',
+  './css/updater.css',
   './js/storage.js',
   './js/router.js',
   './js/modal.js',
   './js/home.js',
   './js/player.js',
   './js/playlists.js',
+  './js/updater.js',
   './lib/lucide.min.js',
   './site.webmanifest',
   './assets/icons/favicon.ico',
@@ -50,11 +52,10 @@ self.addEventListener('install', (event) => {
     }).catch((err) => {
       // Storage might be blocked by tracking prevention or quota limits
       console.warn('[SW] Pre-cache failed (storage may be restricted):', err);
-    }).then(() => {
-      // Activate immediately without waiting for page reload
-      return self.skipWaiting();
     })
   );
+  // Do NOT call skipWaiting() here — let the new SW enter waiting state.
+  // The page (UpdateManager) will send SKIP_WAITING when the user taps "Update Now".
 });
 
 // ----- Activate: Clean up old caches -----
