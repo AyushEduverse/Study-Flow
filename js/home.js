@@ -10,8 +10,37 @@ const Home = {
     this.renderContinueWatching();
     this.renderVideosGrid();
     this.toggleEmptyState();
-    // Hide skeleton after content is rendered
     Router.hideSkeleton('screen-home');
+  },
+
+  // ----- Live search (instant letter-by-letter) -----
+
+  _searchQuery: '',
+
+  _bindLiveSearch() {
+    const input = document.getElementById('live-search-input');
+    const clearBtn = document.getElementById('live-search-clear');
+    if (!input) return;
+
+    // Instant filtering on every keystroke — no debounce
+    input.addEventListener('input', () => {
+      this._searchQuery = input.value.toLowerCase().trim();
+      clearBtn.style.display = input.value ? 'flex' : 'none';
+      this.renderVideosGrid();
+      this.toggleEmptyState();
+      if (typeof refreshIcons === 'function') refreshIcons();
+    });
+
+    // Clear button
+    clearBtn.addEventListener('click', () => {
+      input.value = '';
+      this._searchQuery = '';
+      clearBtn.style.display = 'none';
+      this.renderVideosGrid();
+      this.toggleEmptyState();
+      if (typeof refreshIcons === 'function') refreshIcons();
+      input.focus();
+    });
   },
 
   // ----- Continue Watching -----
@@ -74,20 +103,44 @@ const Home = {
     });
   },
 
-  // ----- Videos Grid -----
+  // ----- Videos Grid (with live search filtering) -----
 
   renderVideosGrid() {
     const grid = document.getElementById('videos-grid');
-    const videos = Storage.getVideos();
+    let videos = Storage.getVideos();
+
+    // Apply live search filter instantly (letter-by-letter)
+    if (this._searchQuery) {
+      videos = videos.filter(v => v.title.toLowerCase().includes(this._searchQuery));
+    }
 
     grid.innerHTML = '';
 
-    if (videos.length === 0) return;
+    if (videos.length === 0) {
+      this._showNoResults();
+      return;
+    }
 
     videos.forEach(video => {
       const card = this.createVideoCard(video);
       grid.appendChild(card);
     });
+  },
+
+  // ----- Show no-results state when search returns empty but videos exist -----
+
+  _showNoResults() {
+    const grid = document.getElementById('videos-grid');
+    const hasVideos = Storage.getVideos().length > 0;
+    if (!hasVideos) return; // Handled by regular empty state
+
+    grid.innerHTML = `
+      <div class="search-no-results">
+        <i data-lucide="search-x" aria-hidden="true"></i>
+        <p>No videos match your search.</p>
+      </div>
+    `;
+    if (typeof refreshIcons === 'function') refreshIcons();
   },
 
   createVideoCard(video) {
@@ -126,24 +179,28 @@ const Home = {
       Player.open(video.id);
     });
 
+    // Haptic feedback on tap (mobile)
+    card.addEventListener('touchstart', () => {
+      if (navigator.vibrate) navigator.vibrate(15);
+    }, { passive: true });
+
     return card;
   },
 
   // ----- Empty State -----
 
   toggleEmptyState() {
-    const videos = Storage.getVideos();
+    const allVideos = Storage.getVideos();
     const emptyState = document.getElementById('empty-state-home');
     const allVideosSection = document.getElementById('all-videos');
 
-    if (videos.length === 0) {
+    if (allVideos.length === 0) {
       emptyState.style.display = 'flex';
       allVideosSection.style.display = 'none';
     } else {
       emptyState.style.display = 'none';
       allVideosSection.style.display = 'block';
     }
-    // Reinit icons for empty state icon and completed badges
     if (typeof refreshIcons === 'function') {
       refreshIcons();
     }
@@ -151,14 +208,9 @@ const Home = {
 
 };
 
-// ----- Helpers -----
-
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
 // ----- Init -----
 
-Home.render();
+document.addEventListener('DOMContentLoaded', () => {
+  Home._bindLiveSearch();
+  Home.render();
+});

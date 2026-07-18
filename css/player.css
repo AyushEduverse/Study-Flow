@@ -7,11 +7,6 @@
   padding: 0;
 }
 
-/* Back button row */
-#screen-player .back-button {
-  margin: 10px 16px;
-}
-
 /* Player wrapper - full width, no gap */
 .player-wrapper {
   width: 100%;
@@ -141,6 +136,119 @@
   white-space: nowrap;
   font-size: 13px;
   padding: 12px 8px;
+}
+
+/* ========================================
+   Gesture & Touch Support Styles
+   ======================================== */
+
+/* Swipe indicator - shown when swiping right to go back */
+.player-swipe-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 48px;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(0,0,0,0.3) 0%, transparent 100%);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 12px;
+  z-index: 50;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 100ms ease;
+}
+
+.player-swipe-indicator svg {
+  width: 24px;
+  height: 24px;
+  color: #FFFFFF;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+/* Floating back button (shown on tap) */
+.player-back-floating {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #FFFFFF;
+  z-index: 60;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  animation: floatBackIn 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) {
+  .player-back-floating:hover {
+    background: rgba(0, 0, 0, 0.7);
+    transform: scale(1.05);
+  }
+}
+
+.player-back-floating:active {
+  transform: scale(0.92);
+}
+
+.player-back-floating svg {
+  width: 22px;
+  height: 22px;
+}
+
+@keyframes floatBackIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* First-visit swipe hint - subtle left-edge pulse */
+.player-swipe-hint {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 56px;
+  height: 100%;
+  z-index: 10;
+  background: linear-gradient(90deg, rgba(77, 166, 255, 0.12) 0%, transparent 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 400ms ease;
+}
+
+.player-swipe-hint.visible {
+  opacity: 1;
+  animation: hintPulse 2.5s ease-in-out;
+}
+
+.player-swipe-hint svg {
+  width: 28px;
+  height: 28px;
+  color: var(--primary);
+  animation: hintSlide 1.2s ease-in-out infinite;
+}
+
+@keyframes hintPulse {
+  0%, 100% { opacity: 0; }
+  10% { opacity: 1; }
+  70% { opacity: 1; }
+  90% { opacity: 0; }
+}
+
+@keyframes hintSlide {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(10px); opacity: 0.6; }
 }
 
 

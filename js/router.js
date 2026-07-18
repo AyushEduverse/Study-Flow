@@ -131,6 +131,12 @@ const Router = {
 
 document.getElementById('nav-home').addEventListener('click', () => {
   Router.showScreen('screen-home');
+  // Clear live search input state
+  const searchInput = document.getElementById('live-search-input');
+  if (searchInput) searchInput.value = '';
+  const clearBtn = document.getElementById('live-search-clear');
+  if (clearBtn) clearBtn.style.display = 'none';
+  Home._searchQuery = '';
   // Re-render home content (also hides skeleton)
   Home.render();
 });

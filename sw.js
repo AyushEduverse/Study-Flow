@@ -3,7 +3,7 @@
    PWA offline support with smart caching
    ======================================== */
 
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const STATIC_CACHE = `studyflow-static-${CACHE_VERSION}`;
 const CDN_CACHE = `studyflow-cdn-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `studyflow-dynamic-${CACHE_VERSION}`;

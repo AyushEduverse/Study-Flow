@@ -344,6 +344,21 @@ const Player = {
       clearTimeout(this._apiTimeout);
       this._apiTimeout = null;
     }
+    // Cleanup gesture state
+    if (typeof PlayerGesture !== 'undefined') {
+      PlayerGesture.destroy();
+    }
+
+    // Hide floating back button if visible
+    const floatingBack = document.getElementById('player-back-floating');
+    if (floatingBack) floatingBack.style.display = 'none';
+
+    // Reset swipe indicator
+    const indicator = document.getElementById('player-swipe-indicator');
+    if (indicator) {
+      indicator.style.opacity = '';
+      indicator.style.transform = '';
+    }
 
     // Cleanup notes
     if (typeof Notes !== 'undefined') {
@@ -361,11 +376,118 @@ const Player = {
 
 };
 
-// ----- Button listeners -----
+// ===== TOUCH & GESTURE SUPPORT (initialized once at page load) =====
 
-document.getElementById('player-back').addEventListener('click', () => {
-  Player.close();
+const PlayerGesture = {
+  _swipeStartX: 0,
+  _swipeStartY: 0,
+  _swiping: false,
+  _backTimer: null,
+
+  init() {
+    const playerScreen = document.getElementById('screen-player');
+    if (!playerScreen) return;
+
+    // ---- Swipe right to go back ----
+    playerScreen.addEventListener('touchstart', (e) => {
+      this._swipeStartX = e.changedTouches[0].screenX;
+      this._swipeStartY = e.changedTouches[0].screenY;
+      this._swiping = false;
+    }, { passive: true });
+
+    playerScreen.addEventListener('touchmove', (e) => {
+      if (!this._swipeStartX) return;
+      const dx = e.changedTouches[0].screenX - this._swipeStartX;
+      const dy = e.changedTouches[0].screenY - this._swipeStartY;
+
+      // Only activate if horizontal swipe dominates
+      if (Math.abs(dx) > Math.abs(dy) * 1.5 && dx > 40) {
+        this._swiping = true;
+        // Show swipe indicator
+        const indicator = document.getElementById('player-swipe-indicator');
+        if (indicator) {
+          const progress = Math.min(dx / 150, 1);
+          indicator.style.opacity = progress;
+          indicator.style.transform = `translateX(${Math.min(dx * 0.4, 40)}px)`;
+        }
+      }
+    }, { passive: true });
+
+    playerScreen.addEventListener('touchend', (e) => {
+      if (!this._swiping) {
+        this._swipeStartX = 0;
+        return;
+      }
+
+      const dx = e.changedTouches[0].screenX - this._swipeStartX;
+      this._swipeStartX = 0;
+      this._swiping = false;
+
+      // Reset indicator
+      const indicator = document.getElementById('player-swipe-indicator');
+      if (indicator) {
+        indicator.style.opacity = '';
+        indicator.style.transform = '';
+      }
+
+      // Complete gesture if swiped far enough
+      if (dx > 80) {
+        Player.close();
+      }
+    }, { passive: true });
+
+    // ---- One-time swipe gesture hint on first player visit ----
+    if (!sessionStorage.getItem('sf_swipe_hint_shown')) {
+      const hint = document.getElementById('player-swipe-hint');
+      if (hint) {
+        hint.classList.add('visible');
+        setTimeout(() => {
+          hint.classList.remove('visible');
+          sessionStorage.setItem('sf_swipe_hint_shown', '1');
+        }, 2500);
+      }
+    }
+
+    // ---- Floating back button ----
+    const floatingBack = document.getElementById('player-back-floating');
+    if (floatingBack) {
+      floatingBack.addEventListener('click', () => {
+        Player.close();
+      });
+    }
+  },
+
+  _toggleFloatingBack() {
+    const btn = document.getElementById('player-back-floating');
+    if (!btn) return;
+
+    if (btn.style.display === 'flex') {
+      btn.style.display = 'none';
+      clearTimeout(this._backTimer);
+      this._backTimer = null;
+    } else {
+      btn.style.display = 'flex';
+      // Auto-hide after 3 seconds
+      clearTimeout(this._backTimer);
+      this._backTimer = setTimeout(() => {
+        btn.style.display = 'none';
+        this._backTimer = null;
+      }, 3000);
+    }
+  },
+
+  destroy() {
+    clearTimeout(this._backTimer);
+    this._backTimer = null;
+  }
+};
+
+// ----- Init gestures once on page load -----
+document.addEventListener('DOMContentLoaded', () => {
+  PlayerGesture.init();
 });
+
+// ----- Button listeners -----
 
 document.getElementById('player-complete-btn').addEventListener('click', () => {
   if (!Player.currentVideoId) return;
@@ -381,6 +503,8 @@ document.getElementById('player-complete-btn').addEventListener('click', () => {
   if (newState) {
     showToast('Video marked as completed \u2713');
   }
+  // Haptic feedback
+  if (navigator.vibrate) navigator.vibrate(20);
 });
 
 document.getElementById('player-delete-btn').addEventListener('click', () => {

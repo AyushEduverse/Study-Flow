@@ -3,7 +3,7 @@
    Dual detection: version.json polling + SW lifecycle
    ======================================== */
 
-const APP_VERSION = '1.8.0';
+const APP_VERSION = '1.9.0';
 const UPDATE_CHECK_INTERVAL = 60 * 60 * 1000; // 1 hour
 
 const UpdateManager = {
@@ -38,6 +38,10 @@ const UpdateManager = {
     });
 
     navigator.serviceWorker.addEventListener('controllerchange', () => {
+      // Backup data before reload to prevent data loss during SW takeover
+      if (typeof Storage !== 'undefined' && Storage.backupAll) {
+        Storage.backupAll();
+      }
       window.location.reload();
     });
   },
@@ -134,7 +138,10 @@ const UpdateManager = {
 
     const sw = this._getWaitingWorker();
     if (!sw) {
-      // No waiting SW — just reload to pick up new version.json
+      // No waiting SW — backup data then just reload to pick up new version.json
+      if (typeof Storage !== 'undefined' && Storage.backupAll) {
+        Storage.backupAll();
+      }
       window.location.reload();
       return;
     }
@@ -144,6 +151,11 @@ const UpdateManager = {
     const progress = document.getElementById('update-progress');
     if (actions) actions.style.display = 'none';
     if (progress) progress.classList.add('active');
+
+    // Backup all user data before SW takes over (prevents data loss)
+    if (typeof Storage !== 'undefined' && Storage.backupAll) {
+      Storage.backupAll();
+    }
 
     // Tell SW to skip waiting
     sw.postMessage({ type: 'SKIP_WAITING' });

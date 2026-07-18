@@ -68,8 +68,8 @@
   }
   </script>
 
-  <!-- Lucide Icons (CDN) -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Lucide Icons (local - avoids tracking prevention & offline issues) -->
+  <script src="lib/lucide.min.js"></script>
   <script>
     /**
      * Global helper to re-initialize Lucide icons in dynamic content.
@@ -105,13 +105,13 @@
   <script src="https://www.youtube.com/iframe_api" async></script>
 
   <!-- App CSS -->
-  <link rel="stylesheet" href="css/main.css?v=1.7">
-  <link rel="stylesheet" href="css/home.css?v=1.7">
-  <link rel="stylesheet" href="css/player.css?v=1.7">
-  <link rel="stylesheet" href="css/playlists.css?v=1.7">
-  <link rel="stylesheet" href="css/modal.css?v=1.7">
-  <link rel="stylesheet" href="css/updater.css?v=1.8">
-  <link rel="stylesheet" href="css/notes.css">
+  <link rel="stylesheet" href="css/main.css?v=1.9">
+  <link rel="stylesheet" href="css/home.css?v=1.9">
+  <link rel="stylesheet" href="css/player.css?v=1.9">
+  <link rel="stylesheet" href="css/playlists.css?v=1.9">
+  <link rel="stylesheet" href="css/modal.css?v=1.9">
+  <link rel="stylesheet" href="css/updater.css?v=1.9">
+  <link rel="stylesheet" href="css/notes.css?v=1.9">
 </head>
 <body>
 
@@ -186,6 +186,27 @@
         <h1 class="app-title">StudyFlow</h1>
       </header>
 
+      <!-- Live Search (instant letter-by-letter filtering) -->
+      <div class="live-search">
+        <div class="live-search-wrapper">
+          <i data-lucide="search" class="live-search-icon" aria-hidden="true"></i>
+          <input
+            type="text"
+            id="live-search-input"
+            class="live-search-input"
+            placeholder="Search videos..."
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            aria-label="Search videos live"
+          >
+          <button id="live-search-clear" class="live-search-clear" aria-label="Clear search" style="display: none;">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+
       <!-- Continue Watching -->
       <section id="continue-watching" class="section" style="display: none;" aria-label="Continue Watching">
         <h2 class="section-title">Continue Watching</h2>
@@ -229,10 +250,6 @@
 
     <!-- Player Skeleton Loader (matches player layout exactly) -->
     <div id="player-skeleton" class="screen-skeleton player-skeleton">
-      <!-- Back button mimic -->
-      <div class="sk-player-back-row">
-        <div class="skeleton sk-h-circle"></div>
-      </div>
       <!-- Player wrapper mimic (16:9) -->
       <div class="skeleton sk-h-player-frame"></div>
       <!-- Info panel mimic -->
@@ -252,14 +269,18 @@
     <!-- Player Content (hidden during skeleton via .skeleton-active .screen-content) -->
     <div id="player-content" class="screen-content">
 
-      <!-- Back Button -->
-      <button id="player-back" class="back-button" aria-label="Go back">
+      <!-- Swipe-to-go-back indicator (appears when swiping) -->
+      <div id="player-swipe-indicator" class="player-swipe-indicator">
         <i data-lucide="arrow-left" aria-hidden="true"></i>
-      </button>
+      </div>
 
       <!-- YouTube Player Container (hidden during skeleton, loads in background) -->
       <div class="player-wrapper" aria-label="Video player">
         <div id="youtube-player"></div>
+        <!-- Swipe hint - brief left-edge pulse animation on first visit -->
+        <div id="player-swipe-hint" class="player-swipe-hint">
+          <i data-lucide="chevron-left" aria-hidden="true"></i>
+        </div>
       </div>
 
       <!-- Video Info -->
@@ -288,6 +309,11 @@
             Delete Video
           </button>
         </div>
+
+        <!-- Floating back button (hidden, shown on tap) -->
+        <button id="player-back-floating" class="player-back-floating" aria-label="Go back" style="display: none;">
+          <i data-lucide="arrow-left" aria-hidden="true"></i>
+        </button>
 
         <!-- Notes Section -->
         <div id="notes-section" class="notes-section">
@@ -608,22 +634,41 @@
   </div>
 
   <!-- ========== APP SCRIPTS (load order matters) ========== -->
-  <script src="js/storage.js?v=1.7"></script>
-  <script src="js/router.js?v=1.7"></script>
-  <script src="js/modal.js?v=1.7"></script>
-  <script src="js/home.js?v=1.7"></script>
-  <script src="js/player.js?v=1.7"></script>
-  <script src="js/playlists.js?v=1.7"></script>
-  <script src="js/notes.js"></script>
-  <script src="js/updater.js?v=1.8"></script>
+  <script src="js/storage.js?v=1.9"></script>
+  <script src="js/router.js?v=1.9"></script>
+  <script src="js/modal.js?v=1.9"></script>
+  <script src="js/home.js?v=1.9"></script>
+  <script src="js/player.js?v=1.9"></script>
+  <script src="js/playlists.js?v=1.9"></script>
+  <script src="js/notes.js?v=1.9"></script>
+  <script src="js/updater.js?v=1.9"></script>
 
   <!-- PWA Service Worker Registration -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js', { scope: './' }).then((reg) => {
-          console.log('[PWA] Service Worker registered for scope:', reg.scope);
+          // Service worker registered successfully
           UpdateManager.init(reg);
+          // Validate data integrity (runs after eager restore from storage.js)
+          if (typeof validateDataIntegrity === 'function') {
+            validateDataIntegrity();
+          }
+          // Safety net: try restoring from backup again and re-render if restored
+          if (typeof Storage !== 'undefined' && Storage.restoreFromBackupIfNeeded) {
+            const result = Storage.restoreFromBackupIfNeeded();
+            if (result.restored) {
+              console.log('[StudyFlow] Backup restored on SW init:', result.types.join(', '));
+              // Re-render the active screen so UI reflects restored data
+              const currentScreen = document.querySelector('.screen.active') || document.getElementById('screen-home');
+              const screenId = currentScreen ? currentScreen.id : 'screen-home';
+              if (screenId === 'screen-home' && typeof Home !== 'undefined' && Home.render) {
+                Home.render();
+              } else if (screenId === 'screen-playlists' && typeof Playlists !== 'undefined' && Playlists.render) {
+                Playlists.render();
+              }
+            }
+          }
         }).catch((err) => {
           console.warn('[PWA] Service Worker registration failed:', err);
         });

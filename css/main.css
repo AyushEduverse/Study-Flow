@@ -817,12 +817,6 @@ input, select, textarea {
 
 /* ---------- Player Skeleton Containers ---------- */
 
-.sk-player-back-row {
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-}
-
 .sk-player-info {
   padding: 16px 16px 24px;
 }
@@ -1003,6 +997,80 @@ input, select, textarea {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+/* ========================================
+   Touch & Gesture Enhancements
+   ======================================== */
+
+/* Prevent pull-to-refresh on player screen (conflicts with swipe gesture) */
+#screen-player {
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: contain;
+}
+
+/* Enhanced touch feedback on all cards */
+.video-card,
+.continue-card,
+.playlist-card {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Ripple-like press effect for cards */
+.video-card:active,
+.continue-card:active,
+.playlist-card:active {
+  transform: scale(0.97);
+}
+
+/* Prevent text selection during touch */
+.player-info,
+.player-wrapper {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Smooth scroll momentum on iOS */
+.screen-content,
+.playlists-list,
+.notes-list {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ========================================
+   Reduced Motion (Accessibility)
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .skeleton {
+    animation: none;
+    background: var(--progress-bg);
+  }
+
+  .screen-content {
+    animation: none;
+    opacity: 1;
+  }
+
+  .progress-fill.animate {
+    transition: none;
+  }
+
+  .player-swipe-hint {
+    display: none !important;
+  }
 }
 
 /* ========================================
